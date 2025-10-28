@@ -1,0 +1,236 @@
+{% load static %}
+{% load humanize %}
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Arqueo de Cierre</title>
+<style>
+  /* ================= BODY ================= */
+  body {
+    font-family: 'Poppins', Arial, sans-serif;
+    font-size: 14px;
+    color: #333;
+    margin: 0;
+    padding: 20px;
+    background: #fdf6f0;
+  }
+
+  /* ================= HEADER ================= */
+  header {
+    text-align: center;
+    margin-bottom: 40px;
+  }
+
+  header h1 {
+    margin: 0;
+    font-size: 32px;
+    color: #4B2E07;
+    letter-spacing: 1px;
+  }
+
+  header p {
+    margin: 5px 0 0;
+    font-size: 16px;
+    color: #7a5d3a;
+  }
+
+  /* ================= TITLES ================= */
+  h2 {
+    margin-top: 40px;
+    color: #A36A2B;
+    border-bottom: 2px solid #A36A2B;
+    padding-bottom: 5px;
+    font-size: 20px;
+  }
+
+  /* ================= TABLAS ================= */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+    background-color: #fff;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+  }
+
+  th, td {
+    padding: 12px 15px;
+    text-align: left;
+  }
+
+  th {
+    background-color: #A36A2B;
+    color: #fff;
+    font-weight: 700;
+    font-size: 15px;
+  }
+
+  tr:nth-child(even) td {
+    background-color: #f9f2eb;
+  }
+
+  tr.total-row th, tr.total-row td {
+    background-color: #4B2E07;
+    color: #fff;
+    font-size: 16px;
+    font-weight: bold;
+    text-align: center;
+  }
+
+  .pedido-separador td {
+    border-top: 2px dashed #A36A2B;
+  }
+
+  .detalle {
+    font-size: 13px;
+    color: #555;
+    padding-left: 15px;
+  }
+
+  .detalle strong {
+    color: #4B2E07;
+  }
+
+  /* ================= TOTAL GENERAL ================= */
+  .total-general {
+    margin: 40px auto 0;
+    padding: 25px 40px;
+    width: max-content;
+    background-color: #2e7d32;
+    color: #fff;
+    font-size: 26px;
+    font-weight: 700;
+    text-align: center;
+    border-radius: 20px;
+    box-shadow: 0 6px 15px rgba(0,0,0,0.2);
+  }
+
+  /* ================= FOOTER ================= */
+  footer {
+    margin-top: 60px;
+    text-align: center;
+    font-size: 12px;
+    color: #777;
+  }
+
+  /* ================= RESPONSIVE ================= */
+  @media (max-width: 768px) {
+    header h1 { font-size: 26px; }
+    h2 { font-size: 18px; }
+    th, td { font-size: 13px; padding: 10px; }
+    .total-general { font-size: 22px; padding: 20px 30px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Pizzería Amigo Cheff</h1>
+  <p>Arqueo de Cierre - {{ cierre.fecha_hora|date:"d/m/Y H:i" }}</p>
+</header>
+
+{% if pedidos|length > 0 %}
+
+<h2>Pedidos Pagados en Efectivo</h2>
+<table>
+  <tr>
+    <th>Pedido #</th>
+    <th>Cliente</th>
+    <th>Total</th>
+    <th>Tipo de Entrega</th>
+  </tr>
+  {% for pedido in pedidos %}
+    {% if not pedido.ind_bancario %}
+    <tr class="pedido-separador">
+      <td>{{ pedido.id }}</td>
+      <td>{{ pedido.cliente|default:"Sin nombre" }}</td>
+      <td>Gs {{ pedido.total|floatformat:0|intcomma }}</td>
+      <td>{{ pedido.get_tipo_entrega_display }}</td>
+    </tr>
+    {% if pedido.detalles.all %}
+    <tr>
+      <td colspan="4" class="detalle">
+        <strong>Detalles:</strong>
+        {% for detalle in pedido.detalles.all %}
+          {% if detalle.producto %}
+            {{ detalle.producto.nombre }} x{{ detalle.cantidad }}{% if detalle.observacion %} (Obs: {{ detalle.observacion }}){% endif %} <br>
+          {% elif detalle.tamano %}
+            Pizza {{ detalle.tamano.nombre }}
+            {% if detalle.sabores.all %}
+              - {% for s in detalle.sabores.all %}{{ s.nombre }}{% if not forloop.last %}, {% endif %}{% endfor %}
+            {% endif %}
+            {% if detalle.observacion %} (Obs: {{ detalle.observacion }}){% endif %}
+            <br>
+          {% endif %}
+        {% endfor %}
+      </td>
+    </tr>
+    {% endif %}
+    {% endif %}
+  {% endfor %}
+  <tr class="total-row">
+    <th colspan="2">Subtotal Efectivo</th>
+    <td colspan="2">Gs {{ total_efectivo|floatformat:0|intcomma }}</td>
+  </tr>
+</table>
+
+<h2>Pedidos Pagados por Banco</h2>
+<table>
+  <tr>
+    <th>Pedido #</th>
+    <th>Cliente</th>
+    <th>Total</th>
+    <th>Tipo de Entrega</th>
+  </tr>
+  {% for pedido in pedidos %}
+    {% if pedido.ind_bancario %}
+    <tr class="pedido-separador">
+      <td>{{ pedido.id }}</td>
+      <td>{{ pedido.cliente|default:"Sin nombre" }}</td>
+      <td>Gs {{ pedido.total|floatformat:0|intcomma }}</td>
+      <td>{{ pedido.get_tipo_entrega_display }}</td>
+    </tr>
+    {% if pedido.detalles.all %}
+    <tr>
+      <td colspan="4" class="detalle">
+        <strong>Detalles:</strong>
+        {% for detalle in pedido.detalles.all %}
+          {% if detalle.producto %}
+            {{ detalle.producto.nombre }} x{{ detalle.cantidad }}{% if detalle.observacion %} (Obs: {{ detalle.observacion }}){% endif %} <br>
+          {% elif detalle.tamano %}
+            Pizza {{ detalle.tamano.nombre }}
+            {% if detalle.sabores.all %}
+              - {% for s in detalle.sabores.all %}{{ s.nombre }}{% if not forloop.last %}, {% endif %}{% endfor %}
+            {% endif %}
+            {% if detalle.observacion %} (Obs: {{ detalle.observacion }}){% endif %} <br>
+          {% endif %}
+        {% endfor %}
+      </td>
+    </tr>
+    {% endif %}
+    {% endif %}
+  {% endfor %}
+  <tr class="total-row">
+    <th colspan="2">Subtotal Banco</th>
+    <td colspan="2">Gs {{ total_banco|floatformat:0|intcomma }}</td>
+  </tr>
+</table>
+
+<!-- TOTAL GENERAL DESTACADO -->
+<div class="total-general">
+  Total General: Gs {{ total|floatformat:0|intcomma }}
+</div>
+
+{% else %}
+<p style="text-align:center; font-size:16px; margin-top:40px;">No hay pedidos para este cierre.</p>
+{% endif %}
+
+<footer>
+  Documento generado automáticamente por el sistema Amigo Cheff
+</footer>
+
+</body>
+</html>

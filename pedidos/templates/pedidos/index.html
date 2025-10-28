@@ -1,0 +1,241 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Amigo Cheff - Inicio</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+    --marron: #A36A2B;
+    --beige: #E2C9A5;
+    --violeta: #4B2E07;
+    --blanco: #FFFFFF;
+    --negro: #000000;
+    --sombra: rgba(0, 0, 0, 0.25);
+    --hover-shadow: rgba(0, 0, 0, 0.4);
+    --radius: 20px;
+    --transition-speed: 0.3s;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Poppins', sans-serif;
+    background: linear-gradient(180deg, var(--marron) 0%, var(--violeta) 100%);
+    color: var(--blanco);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow-x: hidden;
+}
+
+/* HEADER */
+header {
+    text-align: center;
+    padding: 60px 20px 40px;
+    position: relative;
+}
+
+header img {
+    width: 140px;
+    max-width: 30vw;
+    filter: brightness(0) invert(1);
+    transition: transform var(--transition-speed) ease;
+}
+
+header img:hover {
+    transform: scale(1.08);
+}
+
+header h1 {
+    font-size: 2.8rem;
+    color: var(--beige);
+    margin: 15px 0 5px;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    font-weight: 700;
+}
+
+header p {
+    font-size: 1.1rem;
+    color: var(--blanco);
+    opacity: 0.9;
+}
+
+/* CONTENEDOR PRINCIPAL */
+main {
+    flex: 1;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* SECCIONES */
+.section {
+    width: 90%;
+    max-width: 1000px;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: var(--radius);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+    padding: 40px 30px;
+    margin-bottom: 50px;
+    backdrop-filter: blur(8px);
+    text-align: center;
+    transition: transform var(--transition-speed) ease;
+}
+
+.section:hover {
+    transform: translateY(-5px);
+}
+
+.section h2 {
+    color: var(--beige);
+    font-size: 1.8rem;
+    margin-bottom: 25px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+/* GRID BOTONES */
+.btn-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 30px;
+    justify-items: center;
+}
+
+/* BOTONES */
+.btn-card {
+    background-color: var(--beige);
+    color: var(--violeta);
+    width: 220px;
+    height: 130px;
+    border-radius: var(--radius);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    font-size: 1.2rem;
+    font-weight: 600;
+    box-shadow: 0 6px 20px var(--sombra);
+    transition: all var(--transition-speed) ease;
+}
+
+.btn-card span.icon {
+    font-size: 2.5rem;
+    margin-bottom: 10px;
+}
+
+.btn-card:hover {
+    transform: translateY(-8px) scale(1.05);
+    background-color: var(--violeta);
+    color: var(--beige);
+    box-shadow: 0 12px 30px var(--hover-shadow);
+}
+
+/* DIVISOR VISUAL */
+.divider {
+    width: 60%;
+    height: 2px;
+    background-color: var(--beige);
+    opacity: 0.3;
+    margin: 50px auto;
+}
+
+/* FOOTER */
+footer {
+    background-color: var(--violeta);
+    padding: 20px;
+    text-align: center;
+    color: var(--beige);
+    box-shadow: 0 -4px 12px var(--sombra);
+    position: relative;
+}
+
+footer p {
+    margin-bottom: 10px;
+    font-size: 1rem;
+}
+
+footer .moritech {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    opacity: 0.9;
+}
+
+footer .moritech img {
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
+    filter: drop-shadow(0 0 6px var(--sombra));
+    transition: transform var(--transition-speed) ease;
+}
+
+footer .moritech img:hover {
+    transform: scale(1.1);
+}
+
+/* RESPONSIVE */
+@media (max-width: 600px) {
+    header img { width: 35vw; }
+    header h1 { font-size: 1.9rem; }
+    .section { padding: 25px 20px; }
+    .btn-card { width: 170px; height: 110px; font-size: 1.1rem; }
+}
+</style>
+</head>
+<body>
+
+<header>
+    <img src="{% static 'img/cheff.png' %}" alt="Logo Amigo Cheff">
+    <h1>Bienvenido a Amigo Cheff</h1>
+    <p>Gestione fácilmente sus pedidos, ventas y productos</p>
+</header>
+
+<main>
+
+    <!-- SECCIÓN OPERATIVA -->
+    <section class="section">
+        <h2>Gestión de Pedidos y Ventas</h2>
+        <div class="btn-grid">
+            <a href="{% url 'nuevo_pedido' %}" class="btn-card"><span class="icon">➕</span>Nuevo Pedido</a>
+            <a href="{% url 'lista_pedidos' %}" class="btn-card"><span class="icon">📋</span>Ver Pedidos</a>
+            <a href="{% url 'pedidos_del_dia' %}" class="btn-card"><span class="icon">📦</span>Pedidos del Día</a>
+            <a href="{% url 'caja_admin' %}" class="btn-card"><span class="icon">💰</span>Caja Administrador</a>
+        </div>
+    </section>
+
+    <div class="divider"></div>
+
+    <!-- SECCIÓN DE CARGAS -->
+    <section class="section">
+        <h2>Creación y Carga de Datos</h2>
+        <div class="btn-grid">
+            <a href="{% url 'carga_clientes' %}" class="btn-card"><span class="icon">👥</span>Carga Clientes</a>
+            <a href="{% url 'carga_productos' %}" class="btn-card"><span class="icon">🥫</span>Carga Productos</a>
+            <a href="{% url 'carga_sabores' %}" class="btn-card"><span class="icon">🍕</span>Carga Sabores</a>
+        </div>
+    </section>
+
+</main>
+
+<footer>
+    <p>© 2025 Amigo Cheff</p>
+    <div class="moritech">
+        <img src="{% static 'img/moritech.png' %}" alt="Moritech Logo">
+        <span>Desarrollado por Moritech</span>
+    </div>
+</footer>
+
+</body>
+</html>

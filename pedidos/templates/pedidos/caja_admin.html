@@ -1,0 +1,235 @@
+{% load static %}
+{% load humanize %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Caja Administrador - Cierre</title>
+<style>
+:root {
+    --marron: #A36A2B;
+    --violeta: #4B2E07;
+    --blanco: #FFFFFF;
+    --beige: #E2C9A5;
+    --verde: #28a745;
+    --verde-hover: #218838;
+    --sombra: rgba(0,0,0,0.15);
+    --radius: 20px;
+    --transition-speed: 0.3s;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+    font-family: 'Poppins', sans-serif;
+    background: linear-gradient(160deg, var(--beige), #f5e4cf);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-bottom: 50px;
+    color: var(--violeta);
+}
+
+/* HEADER */
+header {
+    width: 100%;
+    background-color: var(--marron);
+    color: var(--blanco);
+    padding: 25px 15px;
+    box-shadow: 0 6px 14px var(--sombra);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+header h1 {
+    font-size: 2.8rem;
+    margin: 10px 0;
+    text-align: center;
+}
+
+/* BOTONES SUPERIORES */
+.botones-arriba {
+    width: 90%;
+    max-width: 1400px;
+    display: flex;
+    justify-content: flex-start;
+    gap: 15px;
+    margin: 20px 0;
+    flex-wrap: wrap;
+}
+
+.btn-cerrar, .btn-volver {
+    padding: 12px 25px;
+    font-size: 1.4rem;
+    font-weight: bold;
+    border: none;
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: background-color var(--transition-speed) ease, transform var(--transition-speed) ease, box-shadow var(--transition-speed) ease;
+}
+
+.btn-cerrar {
+    background-color: var(--verde);
+    color: var(--blanco);
+}
+
+.btn-cerrar:hover {
+    background-color: var(--verde-hover);
+    transform: translateY(-3px) scale(1.03);
+    box-shadow: 0 8px 20px var(--sombra);
+}
+
+/* BOTÓN VOLVER */
+    .btn-volver {
+      background-color: var(--violeta);
+      color: var(--blanco);
+      border: none;
+      padding: 14px 28px;
+      font-size: 1.8rem;
+      font-weight: 600;
+      border-radius: 14px;
+      cursor: pointer;
+      transition: 0.3s;
+      position: absolute;
+      left: 20px;
+      top: 20px;
+      box-shadow: 0 6px 14px var(--sombra-suave);
+    }
+
+    .btn-volver:hover {
+      background-color: var(--marron);
+      transform: scale(1.05);
+    }
+
+/* CONTENEDOR DE PEDIDOS */
+.pedidos-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    gap: 25px;
+    width: 90%;
+    max-width: 1400px;
+    margin-top: 10px;
+}
+
+/* CARD DE PEDIDO */
+.pedido-card {
+    background-color: var(--blanco);
+    color: var(--violeta);
+    border-radius: var(--radius);
+    padding: 20px;
+    box-shadow: 0 5px 15px var(--sombra);
+    transition: transform var(--transition-speed) ease, box-shadow var(--transition-speed) ease;
+    position: relative;
+}
+
+.pedido-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 30px var(--sombra);
+}
+
+.pedido-card h2 {
+    font-size: 1.8rem;
+    margin-bottom: 10px;
+    text-transform: uppercase;
+}
+
+.detalle-item {
+    font-size: 1.3rem;
+    margin: 5px 0;
+    border-left: 4px solid var(--marron);
+    padding-left: 12px;
+}
+
+hr {
+    border: 0;
+    border-top: 2px dashed var(--marron);
+    margin: 15px 0;
+}
+
+/* OBSERVACION GENERAL */
+.observacion-general {
+    margin-top: 15px;
+    background: #f9f3ec;
+    padding: 15px;
+    border-radius: 15px;
+    font-weight: 700;
+    font-size: 1.4rem;
+    color: var(--marron);
+    box-shadow: inset 0 2px 6px rgba(0,0,0,0.05);
+}
+
+/* MENSAJE DE NO HAY PEDIDOS */
+.no-pedidos {
+    font-size: 2rem;
+    color: var(--violeta);
+    text-align: center;
+    margin-top: 80px;
+    font-weight: bold;
+}
+
+/* RESPONSIVE */
+@media (max-width: 600px) {
+    header h1 { font-size: 2rem; }
+    .btn-cerrar, .btn-volver { font-size: 1.1rem; padding: 10px 20px; }
+    .pedido-card { font-size: 1rem; padding: 15px; }
+    .detalle-item { font-size: 1.1rem; }
+}
+</style>
+</head>
+<body>
+
+<header>
+    <h1>📦 Caja Administrador</h1>
+    <button class="btn-volver" onclick="window.location.href='/'">⬅️ Volver</button>
+</header>
+
+{% if pedidos %}
+<div class="botones-arriba">
+    <form action="{% url 'cerrar_caja' %}" method="post" style="display:inline;">
+        {% csrf_token %}
+        <button type="submit" class="btn-cerrar">✅ Cerrar Caja y Generar PDF</button>
+    </form>
+</div>
+
+<div class="pedidos-container">
+    {% for pedido in pedidos %}
+    <div class="pedido-card">
+        <h2>Pedido #{{ pedido.id }} - {{ pedido.cliente|default:"Sin nombre" }}</h2>
+        <div class="detalle-item">🕒 {{ pedido.fecha|date:"H:i" }}</div>
+        <div class="detalle-item">Tipo: {{ pedido.get_tipo_entrega_display }}</div>
+        <div class="detalle-item">Total: GS.{{ pedido.total|floatformat:0|intcomma }}</div>
+        <hr>
+        <div class="detalle-item">Cierre: {{ pedido.cierre_caja|default:"No cerrado" }}</div>
+        {% for d in pedido.detalles.all %}
+            <div class="detalle-item">
+                {% if d.producto %}
+                    🍔 {{ d.producto.nombre }} x{{ d.cantidad }}
+                {% elif d.tamano %}
+                    🍕 Pizza {{ d.tamano.nombre }}
+                    {% if d.sabores.all %}
+                        - {% for s in d.sabores.all %}{{ s.nombre }}{% if not forloop.last %}, {% endif %}{% endfor %}
+                    {% endif %}
+                {% endif %}
+                {% if d.observacion %}
+                    📝 {{ d.observacion }}
+                {% endif %}
+            </div>
+        {% endfor %}
+        {% if pedido.observacion_general %}
+        <div class="observacion-general">⚠️ {{ pedido.observacion_general }}</div>
+        {% endif %}
+    </div>
+    {% endfor %}
+</div>
+
+{% else %}
+<div class="no-pedidos">✅ No hay pedidos listos pendientes</div>
+{% endif %}
+
+</body>
+</html>

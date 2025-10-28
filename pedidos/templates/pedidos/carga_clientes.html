@@ -1,0 +1,259 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nuevo Cliente - Amigo Cheff</title>
+<style>
+  :root {
+    --negro: #000;
+    --blanco: #fff;
+    --marron: #A36A2B;
+    --beige: #F6E8D5;
+    --violeta: #4B2E07;
+    --verde: #28a745;
+    --sombra: rgba(0, 0, 0, 0.15);
+  }
+
+  body {
+        font-family: 'Poppins', 'Segoe UI', sans-serif;
+        background: linear-gradient(160deg, var(--beige), #fdfbf8);
+        margin: 0;
+        color: var(--violeta);
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh; /* altura mínima 100% de la ventana */
+    }
+
+    /* Contenedor principal para empujar el footer */
+    main {
+        flex: 1; /* ocupa todo el espacio disponible */
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        width: 100%;
+    }
+
+  /* === HEADER === */
+  header {
+    width: 100%;
+    background-color: var(--marron);
+    color: var(--blanco);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 2px 10px;
+    box-shadow: 0 6px 16px var(--sombra);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  header h1 {
+    font-size: 2.4rem;
+    margin: 0;
+    text-align: center;
+    flex-grow: 1;
+  }
+  header img {
+    width: 80px;
+    filter: brightness(0) invert(1);
+    transition: transform 0.3s ease;
+  }
+  header img:hover {
+    transform: scale(1.1);
+  }
+  .btn-volver {
+    background-color: var(--violeta);
+    color: var(--blanco);
+    border: none;
+    padding: 10px 20px;
+    font-size: 1rem;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: 0.3s;
+    box-shadow: 0 4px 10px var(--sombra);
+  }
+  .btn-volver:hover {
+    background-color: var(--marron);
+    transform: scale(1.05);
+  }
+
+  form {
+    width: 95%;
+    max-width: 600px;
+    background-color: var(--blanco);
+    padding: 35px 25px;
+    border-radius: 20px;
+    margin: 40px 0 60px;
+    box-shadow: 0 8px 25px var(--sombra);
+  }
+
+  label {
+    font-weight: 600;
+    display: block;
+    margin-bottom: 6px;
+    font-size: 1rem;
+  }
+
+  input[type="text"], input[type="number"], select, textarea {
+    width: 90%;
+    padding: 12px 14px;
+    border-radius: 10px;
+    border: 1.5px solid var(--marron);
+    font-size: 1rem;
+    outline: none;
+    margin-bottom: 15px;
+    transition: 0.3s;
+  }
+
+  input:focus, select:focus, textarea:focus {
+    border-color: var(--violeta);
+    box-shadow: 0 0 5px rgba(75, 46, 7, 0.3);
+  }
+
+  .switch {
+    position: relative;
+    display: inline-block;
+    width: 50px;
+    height: 25px;
+    margin-left: 10px;
+  }
+
+  .switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+
+  .slider {
+    position: absolute;
+    cursor: pointer;
+    inset: 0;
+    background-color: #ccc;
+    border-radius: 34px;
+    transition: 0.3s;
+  }
+
+  .slider:before {
+    position: absolute;
+    content: "";
+    height: 20px;
+    width: 20px;
+    left: 3px;
+    bottom: 2.5px;
+    background-color: white;
+    border-radius: 50%;
+    transition: 0.3s;
+  }
+
+  input:checked + .slider {
+    background-color: var(--marron);
+  }
+
+  input:checked + .slider:before {
+    transform: translateX(24px);
+  }
+
+  button[type="submit"] {
+    width: 100%;
+    background-color: var(--verde);
+    color: var(--blanco);
+    padding: 14px 0;
+    font-size: 1.15rem;
+    margin-top: 25px;
+    border-radius: 10px;
+    cursor: pointer;
+    box-shadow: 0 6px 16px var(--sombra);
+    transition: 0.3s;
+  }
+
+  button[type="submit"]:hover {
+    transform: scale(1.03);
+    background-color: #218838;
+  }
+
+  /* === FOOTER === */
+  footer {
+    text-align: center;
+    padding: 25px;
+    background: var(--violeta);
+    color: var(--beige);
+    font-size: 0.9rem;
+    width: 100%;
+    box-shadow: 0 -4px 12px var(--sombra);
+  }
+  footer img {
+    width: 28px;
+    vertical-align: middle;
+    margin-right: 8px;
+    border-radius: 6px;
+  }
+
+  @media (max-width: 768px) {
+    header {
+        padding: auto;
+    }
+    header img {
+        padding: 20px;
+    }
+    header h1 {
+        font-size: 1.6rem;
+    }
+    .btn-volver { font-size: 0.8rem; padding: auto; }
+    form { padding: 20px 5px;
+            }
+  }
+</style>
+</head>
+<body>
+  <header>
+    <button class="btn-volver" onclick="window.location.href='/'">⬅️ Volver</button>
+    <h1>📋 Nuevo Cliente</h1>
+    <img src="{% static 'img/cheff.png' %}" alt="Logo Amigo Cheff">
+  </header>
+<main>
+    <form method="POST">
+        {% csrf_token %}
+        <label>Nombre:</label>
+        {{ form.nombre }}
+        {{ form.nombre.errors }}
+
+        <label>Apellido:</label>
+        {{ form.apellido }}
+        {{ form.apellido.errors }}
+
+        <label>Teléfono:</label>
+        {{ form.telefono }}
+        {{ form.telefono.errors }}
+
+        <label>¿Es mesa?</label>
+        <label class="switch">
+        <input type="checkbox" name="es_mesa" {% if form.es_mesa.value %}checked{% endif %}>
+        <span class="slider"></span>
+        </label>
+
+        <button type="submit">💾 Guardar Cliente</button>
+    </form>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  {% if cliente_guardado %}
+  <script>
+  Swal.fire({
+    title: "Cliente guardado!",
+    text: "El Cliente se registró correctamente 🎉",
+    icon: "success",
+    confirmButtonColor: "#4B2E07",
+    confirmButtonText: "Aceptar"
+  }).then(() => {
+    window.location.href = "/";  // Redirección después de aceptar
+  });
+  </script>
+  {% endif %}
+<footer>
+    <img src="{% static 'img/moritech.png' %}" alt="Moritech">
+    Desarrollado por Moritech © 2025
+</footer>
+
+</body>
+</html>
