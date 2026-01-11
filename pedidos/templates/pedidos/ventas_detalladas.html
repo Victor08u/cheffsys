@@ -1,0 +1,266 @@
+{% load static %}
+{% load humanize %}
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>📊 Ventas Detalladas</title>
+  <style>
+    :root {
+      --negro: #000;
+      --blanco: #fff;
+      --marron: #A36A2B;
+      --beige: #E2C9A5;
+      --violeta: #4B2E07;
+      --verde: #2e7d32;
+      --sombra: rgba(0, 0, 0, 0.15);
+    }
+
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: linear-gradient(160deg, var(--beige), #fffaf3);
+      color: var(--violeta);
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    /* HEADER */
+    header {
+      width: 100%;
+      background-color: var(--marron);
+      color: var(--blanco);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 25px 40px;
+      box-shadow: 0 6px 14px var(--sombra-suave);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    header h1 {
+      flex: 1;
+      text-align: center;
+      font-size: 3.2rem;
+      letter-spacing: 1px;
+      margin: 0;
+      text-transform: uppercase;
+    }
+
+    header img {
+      width: 100px;
+      filter: brightness(0) invert(1);
+      transition: transform 0.3s ease;
+    }
+
+    header img:hover {
+      transform: scale(1.1);
+    }
+    .btn-volver {
+      background-color: var(--violeta);
+      color: var(--blanco);
+      border: none;
+      padding: 14px 26px;
+      font-size: 1.6rem;
+      font-weight: bold;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: 0.3s;
+      box-shadow: 0 4px 12px var(--sombra-suave);
+    }
+
+    .btn-volver:hover {
+      background-color: var(--marron);
+      transform: scale(1.05);
+    }
+
+    .filtro-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 15px;
+      background-color: #ffffffcc;
+      padding: 15px 25px;
+      margin: 30px 0;
+      border-radius: 15px;
+      box-shadow: 0 4px 10px var(--sombra);
+    }
+
+    .filtro-container label {
+      font-size: 1.2rem;
+      font-weight: 600;
+    }
+
+    .filtro-container input {
+      padding: 8px 12px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      font-size: 1rem;
+      width: 80px;
+      text-align: center;
+    }
+
+    .filtro-container button {
+      background-color: var(--violeta);
+      color: var(--blanco);
+      border: none;
+      padding: 10px 20px;
+      font-size: 1.1rem;
+      font-weight: 600;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    .filtro-container button:hover {
+      background-color: var(--marron);
+      transform: scale(1.05);
+    }
+
+    .seccion {
+      width: 90%;
+      max-width: 1200px;
+      background: var(--blanco);
+      margin-bottom: 40px;
+      border-radius: 20px;
+      box-shadow: 0 6px 20px var(--sombra);
+      overflow: hidden;
+      padding: 25px;
+    }
+
+    h2 {
+      text-align: center;
+      color: var(--marron);
+      font-size: 1.8rem;
+      margin-bottom: 20px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    th, td {
+      padding: 12px 10px;
+      text-align: center;
+      border-bottom: 1px solid #ddd;
+    }
+
+    th {
+      background-color: var(--marron);
+      color: var(--blanco);
+      font-weight: 700;
+    }
+
+    tr:hover {
+      background-color: #fff5e6;
+    }
+
+    footer {
+      margin: 40px 0 20px;
+      color: #555;
+      font-size: 1rem;
+      text-align: center;
+    }
+
+    @media (max-width: 700px) {
+      .filtro-container {
+        flex-direction: column;
+        gap: 10px;
+      }
+      header {
+        font-size: 1.8rem;
+      }
+    }
+  </style>
+</head>
+<body>
+<header>
+    <button class="btn-volver" onclick="window.location.href='/'">⬅️ Volver</button>
+    <div class="header-center">
+      <h1>📈 Ventas Detalladas</h1>
+    </div>
+    <img src="{% static 'img/cheff.png' %}" alt="Amigo Cheff Logo" class="logo-cheff">
+  </header>
+
+<form method="get" class="filtro-container">
+  <label for="mes">Mes:</label>
+  <input type="number" name="mes" id="mes" min="1" max="12" value="{{ mes }}">
+  <label for="anio">Año:</label>
+  <input type="number" name="anio" id="anio" min="2020" max="2100" value="{{ anio }}">
+  <button type="submit">Filtrar</button>
+</form>
+
+<div class="seccion">
+  <h2>Pizzas por Tamaño</h2>
+  <table>
+    <thead>
+      <tr><th>Tamaño</th><th>Cantidad Vendida</th><th>Total (Gs.)</th></tr>
+    </thead>
+    <tbody>
+      {% for p in pizzas_por_tamano %}
+      <tr>
+        <td>{{ p.tamano__nombre }}</td>
+        <td>{{ p.cantidad_total }}</td>
+        <td>Gs. {{ p.total_ventas|floatformat:0|intcomma }}</td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="3">No hay registros.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<div class="seccion">
+  <h2>Pizzas por Sabor</h2>
+  <table>
+    <thead>
+      <tr><th>Sabor</th><th>Cantidad Vendida</th></tr>
+    </thead>
+    <tbody>
+      {% for p in pizzas_por_sabor %}
+      <tr>
+        <td>{{ p.sabores__nombre }}</td>
+        <td>{{ p.cantidad_total }}</td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="3">No hay registros.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<div class="seccion">
+  <h2>Productos por Categoría</h2>
+  <table>
+    <thead>
+      <tr><th>Categoría</th><th>Producto</th><th>Cantidad</th><th>Total (Gs.)</th></tr>
+    </thead>
+    <tbody>
+      {% for p in productos_por_categoria %}
+      <tr>
+        <td>{{ p.producto__categoria }}</td>
+        <td>{{ p.producto__nombre }} - {{p.producto__precio|floatformat:0|intcomma}}</td>
+        <td>{{ p.cantidad_total }}</td>
+        <td>Gs. {{ p.total_ventas|floatformat:0|intcomma }}</td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="4">No hay registros.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<footer>© 2025 - Amigo Cheff</footer>
+
+</body>
+</html>

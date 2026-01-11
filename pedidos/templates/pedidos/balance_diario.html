@@ -1,0 +1,372 @@
+{% load static %}
+{% load humanize %}
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Balance Diario</title>
+  <style>
+    :root {
+      --negro: #000;
+      --blanco: #fff;
+      --marron: #A36A2B;
+      --beige: #E2C9A5;
+      --violeta: #4B2E07;
+      --verde: #2e7d32;
+      --rojo: #c62828;
+      --gris-claro: #f9f6f2;
+      --sombra: rgba(0, 0, 0, 0.15);
+    }
+
+    body {
+      font-family: 'Poppins', 'Segoe UI', sans-serif;
+      background: linear-gradient(160deg, var(--beige), #f7e7d3);
+      color: var(--violeta);
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    header {
+      width: 100%;
+      background-color: var(--marron);
+      color: var(--blanco);
+      padding: 20px 30px;
+      text-align: center;
+      box-shadow: 0 4px 12px var(--sombra);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    header h1 {
+      font-size: 2.5rem;
+      margin: 0;
+      letter-spacing: 1px;
+    }
+
+    /* Filtro */
+    .filtro-container {
+      margin-top: 30px;
+      background-color: var(--blanco);
+      padding: 20px 30px;
+      border-radius: 18px;
+      box-shadow: 0 6px 15px var(--sombra);
+      display: flex;
+      gap: 15px;
+      align-items: center;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .filtro-container label {
+      font-weight: 600;
+      font-size: 1.2rem;
+    }
+
+    .filtro-container input {
+      padding: 10px 15px;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      font-size: 1.1rem;
+      width: 100px;
+      text-align: center;
+    }
+
+    .filtro-container button {
+      background-color: var(--violeta);
+      color: var(--blanco);
+      border: none;
+      padding: 10px 20px;
+      font-size: 1.1rem;
+      font-weight: 600;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: 0.3s;
+      box-shadow: 0 3px 6px var(--sombra);
+    }
+
+    .filtro-container button:hover {
+      background-color: var(--marron);
+      transform: scale(1.05);
+    }
+
+    /* Tarjetas de resumen */
+    .resumen {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+      gap: 25px;
+      width: 90%;
+      max-width: 1000px;
+      margin-top: 40px;
+    }
+
+    .card {
+      background-color: var(--blanco);
+      border-radius: 18px;
+      box-shadow: 0 6px 15px var(--sombra);
+      padding: 25px 20px;
+      text-align: center;
+      transition: transform 0.3s;
+    }
+
+    .card:hover {
+      transform: translateY(-5px);
+    }
+
+    .card h3 {
+      font-size: 1.3rem;
+      color: var(--marron);
+      margin-bottom: 10px;
+    }
+
+    .card p {
+      font-size: 1.5rem;
+      font-weight: bold;
+      margin: 0;
+    }
+
+    .verde { color: var(--verde); }
+    .rojo { color: var(--rojo); }
+
+    /* Sección detalles */
+    .detalles {
+      width: 90%;
+      max-width: 1100px;
+      margin-top: 50px;
+      margin-bottom: 60px;
+    }
+
+    .detalles h2 {
+      font-size: 1.8rem;
+      color: var(--marron);
+      border-bottom: 2px dashed var(--marron);
+      padding-bottom: 5px;
+      margin-bottom: 15px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      box-shadow: 0 5px 15px var(--sombra);
+      border-radius: 15px;
+      overflow: hidden;
+    }
+
+    th, td {
+      padding: 12px 15px;
+      text-align: left;
+    }
+
+    th {
+      background-color: var(--marron);
+      color: var(--blanco);
+      font-weight: 600;
+      text-transform: uppercase;
+      font-size: 1rem;
+    }
+
+    tr:nth-child(even) {
+      background-color: var(--gris-claro);
+    }
+
+    tr:hover {
+      background-color: #f1e1d0;
+    }
+
+    td {
+      font-size: 1.1rem;
+    }
+
+    .no-data {
+      text-align: center;
+      padding: 20px;
+      color: var(--violeta);
+      font-weight: bold;
+    }
+    /* HEADER */
+    header {
+      width: 100%;
+      background-color: var(--marron);
+      color: var(--blanco);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 25px 40px;
+      box-shadow: 0 6px 14px var(--sombra-suave);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    header h1 {
+      flex: 1;
+      text-align: center;
+      font-size: 3.2rem;
+      letter-spacing: 1px;
+      margin: 0;
+      text-transform: uppercase;
+    }
+
+    header img {
+      width: 100px;
+      filter: brightness(0) invert(1);
+      transition: transform 0.3s ease;
+    }
+
+    header img:hover {
+      transform: scale(1.1);
+    }
+    .btn-volver {
+      background-color: var(--violeta);
+      color: var(--blanco);
+      border: none;
+      padding: 14px 26px;
+      font-size: 1.6rem;
+      font-weight: bold;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: 0.3s;
+      box-shadow: 0 4px 12px var(--sombra-suave);
+    }
+
+    .btn-volver:hover {
+      background-color: var(--marron);
+      transform: scale(1.05);
+    }
+
+    @media (max-width: 700px) {
+      table, thead, tbody, th, td, tr {
+        display: block;
+      }
+      th { display: none; }
+      td {
+        padding: 10px;
+        position: relative;
+        text-align: right;
+        border-bottom: 1px solid #ddd;
+      }
+      td::before {
+        content: attr(data-label);
+        position: absolute;
+        left: 15px;
+        font-weight: bold;
+        color: var(--marron);
+      }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+    <button class="btn-volver" onclick="window.location.href='/'">⬅️ Volver</button>
+    <div class="header-center">
+      <h1>📊 Balance Diario</h1>
+    </div>
+    <img src="{% static 'img/cheff.png' %}" alt="Amigo Cheff Logo" class="logo-cheff">
+  </header>
+
+<form method="get" class="filtro-container">
+  <label>Fecha:</label>
+  <input type="date" name="fecha" value="{{ fecha|date:'Y-m-d' }}">
+  <button type="submit">Filtrar</button>
+</form>
+
+<section class="resumen">
+
+  <div class="card">
+    <h3>Total Ventas</h3>
+    <p>Gs. {{ total_ventas|floatformat:0|intcomma }}</p>
+  </div>
+
+  <div class="card">
+    <h3>Efectivo</h3>
+    <p>Gs. {{ total_efectivo|floatformat:0|intcomma }}</p>
+  </div>
+
+  <div class="card">
+    <h3>Bancario</h3>
+    <p>Gs. {{ total_bancario|floatformat:0|intcomma }}</p>
+  </div>
+
+  <div class="card">
+    <h3>Gastos</h3>
+    <p class="rojo">Gs. {{ total_gastos|floatformat:0|intcomma }}</p>
+  </div>
+  <div class="card">
+    <h3>Gastos Efectivo</h3>
+    <p class="rojo">Gs. {{ total_gastos_efectivo|floatformat:0|intcomma }}</p>
+  </div>
+    <div class="card">
+        <h3>Gastos Bancarios</h3>
+        <p class="rojo">Gs. {{ total_gastos_bancarios|floatformat:0|intcomma }}</p>
+  </div>
+
+  <div class="card">
+    <h3>Balance Final</h3>
+    <p class="{% if balance_final < 0 %}rojo{% else %}verde{% endif %}">
+      Gs. {{ balance_final|floatformat:0|intcomma }}
+    </p>
+  </div>
+  <div class="card">
+    <h3>Caja Actual</h3>
+    <p class="verde">Gs. {{ caja_actual|floatformat:0|intcomma }}</p>
+  </div>
+
+</section>
+
+<section class="detalles">
+  <h2>🧾 Ventas del Día</h2>
+  {% if pedidos %}
+  <table>
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Fecha</th>
+        <th>Total</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for p in pedidos %}
+      <tr>
+        <td>#{{ p.id }}</td>
+        <td>{{ p.fecha|date:"d/m/Y" }}</td>
+        <td>Gs. {{ p.total|floatformat:0|intcomma }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+    <p class="no-data">No hay ventas en esta fecha.</p>
+  {% endif %}
+
+  <h2>💸 Gastos del Día</h2>
+  {% if gastos %}
+  <table>
+    <thead>
+      <tr>
+        <th>Fecha</th>
+        <th>Descripción</th>
+        <th>Monto</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for g in gastos %}
+      <tr>
+        <td>{{ g.fecha|date:"d/m/Y" }}</td>
+        <td>{{ g.descripcion }}</td>
+        <td>Gs. {{ g.monto|floatformat:0|intcomma }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+    <p class="no-data">No hay gastos en esta fecha.</p>
+  {% endif %}
+</section>
+
+</body>
+</html>

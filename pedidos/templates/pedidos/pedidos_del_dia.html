@@ -294,8 +294,10 @@
   </form>
 
   {% if pedidos %}
-    <div class="total-dia">
-      💵 Total general del día: <strong>Gs {{ total_dia|floatformat:0|intcomma }}</strong>
+    <div class="totales-dia">
+      <div class="total-dia">
+        💰 Total del día: <strong>Gs {{ total_dia|floatformat:0|intcomma }}</strong>
+      </div>
     </div>
 
     <div class="pedidos-container">

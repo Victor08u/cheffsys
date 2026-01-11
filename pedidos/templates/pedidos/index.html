@@ -209,9 +209,10 @@ footer .moritech img:hover {
         <h2>Gestión de Pedidos y Ventas</h2>
         <div class="btn-grid">
             <a href="{% url 'nuevo_pedido' %}" class="btn-card"><span class="icon">➕</span>Nuevo Pedido</a>
-            <a href="{% url 'lista_pedidos' %}" class="btn-card"><span class="icon">📋</span>Ver Pedidos</a>
+            <a href="{% url 'lista_pedidos' %}" class="btn-card"><span class="icon">📋</span>Ver Cocina</a>
             <a href="{% url 'pedidos_del_dia' %}" class="btn-card"><span class="icon">📦</span>Pedidos del Día</a>
             <a href="{% url 'caja_admin' %}" class="btn-card"><span class="icon">💰</span>Caja Administrador</a>
+            <a href="{% url 'lista_pedidos_pendientes' %}" class="btn-card"><span class="icon">📋</span>Ver Pedidos</a>
         </div>
     </section>
 
@@ -224,6 +225,12 @@ footer .moritech img:hover {
             <a href="{% url 'carga_clientes' %}" class="btn-card"><span class="icon">👥</span>Carga Clientes</a>
             <a href="{% url 'carga_productos' %}" class="btn-card"><span class="icon">🥫</span>Carga Productos</a>
             <a href="{% url 'carga_sabores' %}" class="btn-card"><span class="icon">🍕</span>Carga Sabores</a>
+            <a href="{% url 'carga_gastos' %}" class="btn-card"><span class="icon">🧾</span>Carga Gastos</a>
+            <a href="{% url 'balance_mensual' %}" class="btn-card"><span class="icon">🧾</span>Balance Mensual</a>
+            <a href="{% url 'ventas_detalladas' %}" class="btn-card"><span class="icon">🧾</span>Ventas Detalladas</a>
+            <a href="{% url 'balance_diario' %}" class="btn-card"><span class="icon">🧾</span>Balance Diario</a>
+            <a href="{% url 'caja_actual' %}" class="btn-card"><span class="icon">💰</span>Caja Actual</a>
+            <a href="{% url 'listar_productos' %}" class="btn-card"><span class="icon">📦</span>Lista Productos</a>
         </div>
     </section>
 

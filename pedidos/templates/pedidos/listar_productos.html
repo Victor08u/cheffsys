@@ -1,0 +1,386 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Listado de Productos</title>
+
+<style>
+  :root {
+    --negro: #000;
+    --blanco: #fff;
+    --marron: #A36A2B;
+    --beige: #F6E8D5;
+    --violeta: #4B2E07;
+    --verde: #28a745;
+    --sombra: rgba(0, 0, 0, 0.15);
+  }
+
+  body {
+    font-family: 'Poppins', 'Segoe UI', sans-serif;
+    background: linear-gradient(160deg, var(--beige), #fdfbf8);
+    margin: 0;
+    color: var(--violeta);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
+  }
+
+  /* === HEADER === */
+  header {
+    width: 100%;
+    background-color: var(--marron);
+    color: var(--blanco);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 2px 10px;
+    box-shadow: 0 6px 16px var(--sombra);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  header h1 {
+    font-size: 2.4rem;
+    margin: 0;
+    text-align: center;
+    flex-grow: 1;
+  }
+  header img {
+    width: 80px;
+    filter: brightness(0) invert(1);
+    transition: transform 0.3s ease;
+  }
+  header img:hover {
+    transform: scale(1.1);
+  }
+  .btn-volver {
+    background-color: var(--violeta);
+    color: var(--blanco);
+    border: none;
+    padding: 10px 20px;
+    font-size: 1rem;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: 0.3s;
+    box-shadow: 0 4px 10px var(--sombra);
+  }
+  .btn-volver:hover {
+    background-color: var(--marron);
+    transform: scale(1.05);
+  }
+
+  /* === FORMULARIO === */
+  form {
+    width: 95%;
+    max-width: 600px;
+    background-color: var(--blanco);
+    padding: 35px 25px;
+    border-radius: 20px;
+    margin: 40px 0 60px;
+    box-shadow: 0 8px 25px var(--sombra);
+  }
+
+  form p {
+    margin-bottom: 18px;
+  }
+
+  label {
+    font-weight: 600;
+    display: block;
+    margin-bottom: 6px;
+    font-size: 1rem;
+  }
+
+  input[type="text"],
+  input[type="number"],
+  select,
+  textarea {
+    width: 90%;
+    padding: 12px 14px;
+    border-radius: 10px;
+    border: 1.5px solid var(--marron);
+    font-size: 1rem;
+    outline: none;
+    transition: 0.3s;
+  }
+
+  input:focus,
+  select:focus,
+  textarea:focus {
+    border-color: var(--violeta);
+    box-shadow: 0 0 5px rgba(75, 46, 7, 0.3);
+  }
+
+  button[type="submit"] {
+    width: 100%;
+    background-color: var(--verde);
+    color: var(--blanco);
+    padding: 14px 0;
+    font-size: 1.15rem;
+    margin-top: 25px;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    box-shadow: 0 6px 16px var(--sombra);
+    font-weight: bold;
+    transition: 0.3s;
+  }
+  button[type="submit"]:hover {
+    background-color: #218838;
+    transform: scale(1.03);
+  }
+
+  .btn-secondary {
+    display: block;
+    width: 100%;
+    text-align: center;
+    margin-top: 12px;
+    padding: 10px 0;
+    background-color: var(--marron);
+    color: var(--blanco);
+    text-decoration: none;
+    border-radius: 10px;
+    font-weight: bold;
+    transition: 0.3s;
+  }
+
+  .btn-secondary:hover {
+    background-color: var(--violeta);
+  }
+  /* CONTENEDOR */
+  .tabla-contenedor {
+    width: 95%;
+    margin: 30px auto;
+  }
+
+  /* CABECERA */
+  .tabla-cabecera {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 1fr 1fr;
+    background: var(--marron);
+    color: var(--blanco);
+    padding: 16px;
+    border-radius: 14px;
+    font-weight: bold;
+    box-shadow: 0 4px 12px var(--sombra);
+  }
+
+  /* FILA */
+  .tabla-fila {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 1fr 1fr;
+    background: var(--blanco);
+    margin-top: 12px;
+    padding: 18px;
+    border-radius: 14px;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.08);
+    transition: 0.25s ease;
+    align-items: center;
+  }
+
+  /* HOVER */
+  .tabla-fila:hover {
+    transform: scale(1.02);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+    background: #fcf9f4;
+  }
+
+  /* TEXTO */
+  .col {
+    font-size: 1rem;
+    color: var(--violeta);
+  }
+
+  /* DISPONIBLE */
+  .estado-ok {
+    background: #c8f7c5;
+    color: #0b6e00;
+    padding: 5px 12px;
+    border-radius: 8px;
+    text-align: center;
+    font-weight: bold;
+  }
+
+  .estado-no {
+    background: #ffd6d6;
+    color: #a30000;
+    padding: 5px 12px;
+    border-radius: 8px;
+    text-align: center;
+    font-weight: bold;
+  }
+
+  /* BOTÓN EDITAR */
+  .btn-editar {
+    background: var(--verde);
+    padding: 10px 14px;
+    border-radius: 12px;
+    text-decoration: none;
+    color: var(--blanco);
+    font-weight: bold;
+    box-shadow: 0 4px 10px var(--sombra);
+    transition: 0.25s ease;
+    text-align: center;
+  }
+
+  .btn-editar:hover {
+    transform: scale(1.07);
+    background: #1f7a33;
+  }
+  .filtro-contenedor {
+  width: 95%;
+  margin: 25px auto 10px auto;
+  display: flex;
+  justify-content: center;
+}
+
+.filtro-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  background: var(--blanco);
+  padding: 12px 16px;
+  border-radius: 14px;
+  box-shadow: 0 6px 20px var(--sombra);
+}
+
+.filtro-form label {
+  font-weight: 600;
+  color: var(--violeta);
+}
+
+.filtro-form select {
+  padding: 8px 12px;
+  border-radius: 10px;
+  border: 1.5px solid var(--marron);
+  font-size: 1rem;
+  outline: none;
+  transition: 0.3s;
+}
+
+.filtro-form select:focus {
+  border-color: var(--violeta);
+  box-shadow: 0 0 5px rgba(75,46,7,0.3);
+}
+
+.filtro-form button {
+  padding: 8px 16px;
+  border-radius: 10px;
+  background: var(--verde);
+  color: var(--blanco);
+  font-weight: bold;
+  border: none;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.filtro-form button:hover {
+  background: #218838;
+  transform: scale(1.03);
+}
+
+
+  /* FOOTER */
+  footer {
+    text-align: center;
+    padding: 25px;
+    background: var(--violeta);
+    color: var(--beige);
+    font-size: 0.9rem;
+    width: 100%;
+    box-shadow: 0 -4px 12px var(--sombra);
+  }
+  footer img {
+    width: 28px;
+    vertical-align: middle;
+    margin-right: 8px;
+    border-radius: 6px;
+  }
+  @media (max-width: 500px) {
+  .filtro-form {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .filtro-form button {
+    width: 100%;
+  }
+}
+
+</style>
+</head>
+
+<body>
+
+<header>
+    <button class="btn-volver" onclick="window.location.href='{% url 'inicio' %}'">⬅️ Volver</button>
+    <h1>📋 Lista de Productos</h1>
+    <img src="{% static 'img/cheff.png' %}" alt="Logo Amigo Cheff">
+  </header>
+
+<<div class="filtro-contenedor">
+  <form method="GET" class="filtro-form">
+    <label for="categoria">Filtrar por categoría:</label>
+    <select name="categoria" id="categoria">
+      <option value="">-- Todas --</option>
+      <option value="hamburguesa" {% if request.GET.categoria == 'hamburguesa' %}selected{% endif %}>Hamburguesa</option>
+      <option value="papas" {% if request.GET.categoria == 'papas' %}selected{% endif %}>Papas</option>
+      <option value="bebida" {% if request.GET.categoria == 'bebida' %}selected{% endif %}>Bebida</option>
+      <option value="menu" {% if request.GET.categoria == 'menu' %}selected{% endif %}>Menú</option>
+      <option value="otro" {% if request.GET.categoria == 'otro' %}selected{% endif %}>Otro</option>
+    </select>
+    <button type="submit">Filtrar</button>
+  </form>
+</div>
+
+<div class="tabla-contenedor">
+
+  <!-- Cabecera -->
+  <div class="tabla-cabecera">
+    <div>Nombre</div>
+    <div>Categoría</div>
+    <div>Precio</div>
+    <div>Disponible</div>
+    <div>Acciones</div>
+  </div>
+
+  <!-- Filas dinámicas -->
+  {% for producto in productos %}
+    <div class="tabla-fila">
+      <div class="col">{{ producto.nombre }}</div>
+      <div class="col">{{ producto.get_categoria_display }}</div>
+      <div class="col">{{ producto.precio }} Gs</div>
+
+      <div class="col">
+        {% if producto.disponible %}
+          <span class="estado-ok">✔ Disponible</span>
+        {% else %}
+          <span class="estado-no">✖ No Disponible</span>
+        {% endif %}
+      </div>
+
+      <div class="col">
+        <a href="{% url 'editar_producto' producto.id %}" class="btn-editar">✏ Editar</a>
+      </div>
+    </div>
+
+  {% empty %}
+    <div class="tabla-fila">
+      <div style="grid-column: 1 / 6; text-align:center;">
+        No hay productos cargados.
+      </div>
+    </div>
+  {% endfor %}
+
+</div>
+
+<footer>
+  <img src="{% static 'img/moritech.png' %}" alt="Moritech">
+  Desarrollado por Moritech © 2025
+</footer>
+
+</body>
+</html>

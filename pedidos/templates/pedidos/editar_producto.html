@@ -1,0 +1,210 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Editar Producto - Amigo Cheff</title>
+
+<style>
+  :root {
+    --negro: #000;
+    --blanco: #fff;
+    --marron: #A36A2B;
+    --beige: #F6E8D5;
+    --violeta: #4B2E07;
+    --verde: #28a745;
+    --sombra: rgba(0, 0, 0, 0.15);
+  }
+
+  body {
+    font-family: 'Poppins', 'Segoe UI', sans-serif;
+    background: linear-gradient(160deg, var(--beige), #fdfbf8);
+    margin: 0;
+    color: var(--violeta);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
+  }
+
+  /* === HEADER === */
+  header {
+    width: 100%;
+    background-color: var(--marron);
+    color: var(--blanco);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 2px 10px;
+    box-shadow: 0 6px 16px var(--sombra);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  header h1 {
+    font-size: 2.4rem;
+    margin: 0;
+    text-align: center;
+    flex-grow: 1;
+  }
+  header img {
+    width: 80px;
+    filter: brightness(0) invert(1);
+    transition: transform 0.3s ease;
+  }
+  header img:hover {
+    transform: scale(1.1);
+  }
+  .btn-volver {
+    background-color: var(--violeta);
+    color: var(--blanco);
+    border: none;
+    padding: 10px 20px;
+    font-size: 1rem;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: 0.3s;
+    box-shadow: 0 4px 10px var(--sombra);
+  }
+  .btn-volver:hover {
+    background-color: var(--marron);
+    transform: scale(1.05);
+  }
+
+  /* === FORMULARIO === */
+  form {
+    width: 95%;
+    max-width: 600px;
+    background-color: var(--blanco);
+    padding: 35px 25px;
+    border-radius: 20px;
+    margin: 40px 0 60px;
+    box-shadow: 0 8px 25px var(--sombra);
+  }
+
+  form p {
+    margin-bottom: 18px;
+  }
+
+  label {
+    font-weight: 600;
+    display: block;
+    margin-bottom: 6px;
+    font-size: 1rem;
+  }
+
+  input[type="text"],
+  input[type="number"],
+  select,
+  textarea {
+    width: 90%;
+    padding: 12px 14px;
+    border-radius: 10px;
+    border: 1.5px solid var(--marron);
+    font-size: 1rem;
+    outline: none;
+    transition: 0.3s;
+  }
+
+  input:focus,
+  select:focus,
+  textarea:focus {
+    border-color: var(--violeta);
+    box-shadow: 0 0 5px rgba(75, 46, 7, 0.3);
+  }
+
+  button[type="submit"] {
+    width: 100%;
+    background-color: var(--verde);
+    color: var(--blanco);
+    padding: 14px 0;
+    font-size: 1.15rem;
+    margin-top: 25px;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    box-shadow: 0 6px 16px var(--sombra);
+    font-weight: bold;
+    transition: 0.3s;
+  }
+  button[type="submit"]:hover {
+    background-color: #218838;
+    transform: scale(1.03);
+  }
+
+  .btn-secondary {
+    display: block;
+    width: 100%;
+    text-align: center;
+    margin-top: 12px;
+    padding: 10px 0;
+    background-color: var(--marron);
+    color: var(--blanco);
+    text-decoration: none;
+    border-radius: 10px;
+    font-weight: bold;
+    transition: 0.3s;
+  }
+
+  .btn-secondary:hover {
+    background-color: var(--violeta);
+  }
+
+  /* FOOTER */
+  footer {
+    text-align: center;
+    padding: 25px;
+    background: var(--violeta);
+    color: var(--beige);
+    font-size: 0.9rem;
+    width: 100%;
+    box-shadow: 0 -4px 12px var(--sombra);
+  }
+  footer img {
+    width: 28px;
+    vertical-align: middle;
+    margin-right: 8px;
+    border-radius: 6px;
+  }
+</style>
+</head>
+
+<body>
+
+  <header>
+    <button class="btn-volver" onclick="window.location.href='{% url 'inicio' %}'">⬅️ Volver</button>
+    <h1>✏️ Editar Producto</h1>
+    <img src="{% static 'img/cheff.png' %}" alt="Logo Amigo Cheff">
+  </header>
+
+  <form method="POST">
+    {% csrf_token %}
+    {{ form.as_p }}
+
+    <button type="submit">💾 Guardar cambios</button>
+    <a href="{% url 'inicio' %}" class="btn-secondary">↩ Volver</a>
+  </form>
+
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+  {% if guardado %}
+  <script>
+  Swal.fire({
+    title: "Producto actualizado",
+    text: "El producto se modificó correctamente",
+    icon: "success",
+    confirmButtonColor: "#4B2E07",
+  }).then(() => {
+    window.location.href = "{% url 'listar_productos' %}";
+  });
+  </script>
+  {% endif %}
+
+  <footer>
+    <img src="{% static 'img/moritech.png' %}" alt="Moritech">
+    Desarrollado por Moritech © 2025
+  </footer>
+
+</body>
+</html>

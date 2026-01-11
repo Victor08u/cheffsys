@@ -1,0 +1,520 @@
+{% load static %}
+{% load humanize %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Lista de Pedidos - Pantalla Pendientes</title>
+  <style>
+    :root {
+      --negro: #000000;
+      --blanco: #FFFFFF;
+      --marron: #A36A2B;
+      --beige: #E2C9A5;
+      --violeta: #4B2E07;
+      --verde: #2e7d32;
+      --rojo: #B23A48;
+      --sombra-suave: rgba(0, 0, 0, 0.1);
+    }
+
+    body {
+      font-family: 'Poppins', 'Segoe UI', sans-serif;
+      background: linear-gradient(160deg, var(--beige), #f5e4cf);
+      color: var(--violeta);
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      overflow-x: hidden;
+    }
+
+    /* HEADER */
+    header {
+      width: 100%;
+      background-color: var(--marron);
+      color: var(--blanco);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 25px 40px;
+      box-shadow: 0 6px 14px var(--sombra-suave);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    header h1 {
+      flex: 1;
+      text-align: center;
+      font-size: 3.2rem;
+      letter-spacing: 1px;
+      margin: 0;
+      text-transform: uppercase;
+    }
+
+    header img {
+      width: 100px;
+      filter: brightness(0) invert(1);
+      transition: transform 0.3s ease;
+    }
+
+    header img:hover {
+      transform: scale(1.1);
+    }
+
+    .refresh-indicator {
+      font-size: 1.4rem;
+      color: var(--beige);
+      opacity: 0.9;
+      text-align: center;
+      margin-top: 10px;
+      animation: blink 1.5s infinite alternate;
+    }
+
+    @keyframes blink {
+      from { opacity: 0.7; }
+      to { opacity: 1; }
+    }
+
+    .btn-volver {
+      background-color: var(--violeta);
+      color: var(--blanco);
+      border: none;
+      padding: 14px 26px;
+      font-size: 1.6rem;
+      font-weight: bold;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: 0.3s;
+      box-shadow: 0 4px 12px var(--sombra-suave);
+    }
+
+    .btn-volver:hover {
+      background-color: var(--marron);
+      transform: scale(1.05);
+    }
+
+    /* CONTENEDOR DE PEDIDOS */
+    .pedidos-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
+      gap: 0px;
+      width: 90%;
+      animation: fadeIn 1s ease-in-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .pedido-card {
+      background: var(--blanco);
+      border-radius: 35px;
+      padding: 15px 20px;;
+      box-shadow: 0 8px 10px rgba(0, 0, 0, 0.15);
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+
+      /* ✅ Que se adapte en altura */
+      height: auto;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+    }
+
+    .pedidos-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+      gap: 0px;
+      align-items: start; /* 🔑 evita que se estiren las tarjetas */
+    }
+
+    .pedido-header {
+      font-weight: 800;
+      font-size: 2.8rem;
+      color: var(--marron);
+      margin-bottom: 10px;
+      text-transform: uppercase;
+    }
+
+    .pedido-fecha {
+      color: #7a5d3a;
+      font-size: 2rem;
+      margin-bottom: 11px;
+    }
+    .menu-card {
+      font-size: 1.3rem;
+      padding: 15px 18px;
+      border-radius: 20px;
+      background: #fff8e1;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+      transform: scale(0.9);
+      transition: transform 0.2s ease;
+    }
+
+    .menu-card:hover {
+      transform: scale(0.95);
+    }
+
+    .menu-card .pedido-header {
+      font-size: 1.4rem;
+      margin-bottom: 8px;
+    }
+
+    .menu-card .pedido-fecha {
+      font-size: 1.2rem;
+      margin-bottom: 5px;
+    }
+
+    .menu-card .detalle-producto {
+      font-size: 1.4rem;
+      color: #4b2e07;
+    }
+
+    .menu-card .detalle-observacion {
+      font-size: 1.1rem;
+    }
+
+    .menu-card .btn-listo, .menu-card .btn-eliminar {
+      font-size: 1.3rem;
+      padding: 10px 14px;
+      border-radius: 10px;
+      margin-top: 10px;
+    }
+
+    .menu-card .observacion-general {
+      font-size: 1.3rem;
+      padding: 10px;
+    }
+
+    /* Si todos los pedidos actuales son menú, mostrarlos en 5 columnas */
+    .pedidos-container.menu-view {
+      grid-template-columns: repeat(5, 1fr);
+      gap: 10px;
+    }
+
+
+    .tipo-entrega {
+      background-color: var(--beige);
+      display: inline-block;
+      padding: 14px 28px;
+      border-radius: 21px;
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: var(--violeta);
+      margin-bottom: 21px;
+      text-transform: uppercase;
+    }
+
+    hr {
+      border: 0;
+      border-top: 3px dashed var(--marron);
+      margin: 21px 0;
+    }
+
+    .detalle-item {
+      border-left: 5px solid var(--marron);
+      padding-left: 21px;
+      margin-bottom: 21px;
+    }
+
+    .detalle-producto {
+      font-style: italic;
+      color: var(--violeta);
+      font-size: 2.2rem;
+      font-weight: 600;
+    }
+
+    .detalle-observacion {
+      font-size: 1.8rem;
+      color: var(--marron);
+      margin-left: 14px;
+    }
+
+    .observacion-general {
+      margin-top: 28px;
+      background: #f9f3ec;
+      padding: 21px;
+      border-radius: 21px;
+      font-weight: 700;
+      font-size: 2.1rem;
+      color: var(--marron);
+      box-shadow: inset 0 2px 6px rgba(0,0,0,0.05);
+    }
+
+    .btn-listo {
+      display: inline-block;
+      font-weight: bold;
+      color: white;
+      background-color: #28a745;
+      border: none;
+      font-size: 1.3rem;
+      padding: 10px 14px;
+      border-radius: 10px;
+      margin-top: 10px;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    .btn-listo:hover {
+      background-color: #218838;
+      transform: scale(1.05);
+    }
+    .btn-eliminar {
+      display: inline-block;
+      margin-left: 15px;
+      font-weight: bold;
+      color: white;
+      background-color: #b23a48;
+      border: none;
+      font-size: 1.3rem;
+      padding: 10px 14px;
+      border-radius: 10px;
+      margin-top: 10px;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    .btn-eliminar:hover {
+      background-color: #922d3b;
+      transform: scale(1.05);
+    }
+
+    .no-pedidos {
+      font-size: 2.8rem;
+      color: var(--violeta);
+      text-align: center;
+      margin-top: 112px;
+      font-weight: bold;
+    }
+
+    @media (max-width: 768px) {
+      header {
+        flex-direction: column;
+        text-align: center;
+        gap: 15px;
+      }
+
+      header img {
+        width: 80px;
+      }
+
+      header h1 {
+        font-size: 2.5rem;
+      }
+      .pedidos-container.menu-view {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <button class="btn-volver" onclick="window.location.href='/'">⬅️ Volver</button>
+    <h1>📋 Pedidos Pendientes</h1>
+    <img src="{% static 'img/cheff.png' %}" alt="Logo Amigo Cheff">
+    
+  </header>
+
+  
+
+  <div id="pedidos" class="pedidos-container">
+    {% for pedido in pedidos %}
+      <div class="pedido-card {% if pedido.tiene_menu %}menu-card{% endif %}" id="pedido-{{ pedido.id }}">
+        <div class="pedido-header">Pedido #{{ pedido.id }} - {{ pedido.cliente }}</div>
+        <div class="pedido-fecha">📅 {{ pedido.fecha|date:"d/m/Y H:i" }}</div>
+        <div class="tipo-entrega">{{ pedido.get_tipo_entrega_display }}</div>
+        <hr>
+
+        <div>
+          {% for detalle in pedido.detalles.all %}
+            <div class="detalle-item">
+              {% if detalle.producto %}
+                <span class="detalle-producto">🍕 {{ detalle.producto.nombre }} x{{ detalle.cantidad }} -> {{detalle.producto.precio|floatformat:0|intcomma}} Gs</span>
+              {% elif detalle.tamano %}
+                <span class="detalle-producto">
+                  🍕 Pizza {{ detalle.tamano.nombre }}
+                  {% if detalle.con_borde %}
+                    <span style="color: #28a745; font-weight: bold;">(con borde)</span>
+                  {% endif %}
+                  {% if detalle.sabores.all %}
+                    - {% for s in detalle.sabores.all %}
+                      {{ s.nombre }}{% if not forloop.last %}, {% endif %}
+                    {% endfor %}
+                  {% endif %}
+                </span>
+              {% endif %}
+              {% if detalle.observacion %}
+                <div class="detalle-observacion">📝 {{ detalle.observacion }}</div>
+              {% endif %}
+            </div>
+          {% endfor %}
+        </div>
+
+        {% if pedido.observacion_general %}
+          <div class="observacion-general">⚠️ {{ pedido.observacion_general }}</div>
+        {% endif %}
+
+        {% if pedido.total %}
+          <div style="margin-top: 21px; font-size: 2.5rem; font-weight: 800; color: var(--verde);">
+            💰 Total: {{ pedido.total|floatformat:0|intcomma }} Gs
+          </div>
+        {% endif %}
+
+        <button class="btn-listo" onclick="marcarListo({{ pedido.id }})">✅ Marcar como Listo</button>
+        <button class="btn-eliminar" onclick="eliminarPedido({{ pedido.id }})">🗑️ Eliminar Pedido</button>
+      </div>
+    {% empty %}
+      <div class="no-pedidos">✅ No hay pedidos pendientes</div>
+    {% endfor %}
+  </div>
+  
+  <script>
+  function marcarListo(pedidoId) {
+    Swal.fire({
+      title: "¿Marcar este pedido como LISTO?",
+      text: "Esto notificará al cliente si corresponde.",
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonColor: "#28a745",
+      cancelButtonColor: "#b23a48",
+      confirmButtonText: "Sí, marcar",
+      cancelButtonText: "Cancelar"
+    }).then((result) => {
+      if (!result.isConfirmed) return;
+
+      fetch(`/pedidos/marcar_listo/${pedidoId}/`, {
+        method: "POST",
+        headers: { "X-CSRFToken": getCookie("csrftoken") },
+      })
+      .then(r => r.json())
+      .then(data => {
+        if (data.success) {
+          const card = document.getElementById(`pedido-${pedidoId}`);
+          card.style.transition = "opacity 0.6s ease";
+          card.style.opacity = "0";
+          setTimeout(() => card.remove(), 600);
+
+          Swal.fire({
+            title: "✅ Pedido Listo",
+            text: "El pedido se marcó como listo correctamente.",
+            icon: "success",
+            timer: 1800,
+            showConfirmButton: false
+          });
+
+          if (data.whatsapp) {
+            setTimeout(() => window.open(data.whatsapp, "_blank"), 1500);
+          }
+        } else {
+          Swal.fire({
+            title: "Error",
+            text: data.error || "No se pudo cambiar el estado.",
+            icon: "error",
+            confirmButtonColor: "#b23a48"
+          });
+        }
+      })
+      .catch(() => {
+        Swal.fire({
+          title: "Error de conexión",
+          text: "No se pudo contactar con el servidor.",
+          icon: "error",
+          confirmButtonColor: "#b23a48"
+        });
+      });
+    });
+  }
+
+  function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== "") {
+      const cookies = document.cookie.split(";");
+      for (let i = 0; i < cookies.length; i++) {
+        const cookie = cookies[i].trim();
+        if (cookie.substring(0, name.length + 1) === (name + "=")) {
+          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+          break;
+        }
+      }
+    }
+    return cookieValue;
+  }
+  </script>
+  <script>
+  function eliminarPedido(pedidoId) {
+    Swal.fire({
+      title: "¿Eliminar este pedido?",
+      text: "Esta acción no se puede deshacer.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#b23a48",
+      cancelButtonColor: "#2e7d32",
+      confirmButtonText: "Sí, eliminar",
+      cancelButtonText: "Cancelar"
+    }).then((result) => {
+      if (!result.isConfirmed) return;
+
+      fetch(`/pedidos/eliminar/${pedidoId}/`, {
+        method: "POST",
+        headers: { "X-CSRFToken": getCookie("csrftoken") },
+      })
+      .then(r => r.json())
+      .then(data => {
+        if (data.success) {
+          const card = document.getElementById(`pedido-${pedidoId}`);
+          card.style.transition = "opacity 0.6s ease";
+          card.style.opacity = "0";
+          setTimeout(() => card.remove(), 600);
+
+          Swal.fire({
+            title: "🗑️ Pedido Eliminado",
+            text: "El pedido se eliminó correctamente.",
+            icon: "success",
+            timer: 1800,
+            showConfirmButton: false
+          });
+        } else {
+          Swal.fire({
+            title: "Error",
+            text: data.error || "No se pudo eliminar el pedido.",
+            icon: "error",
+            confirmButtonColor: "#b23a48"
+          });
+        }
+      })
+      .catch(() => {
+        Swal.fire({
+          title: "Error de conexión",
+          text: "No se pudo contactar con el servidor.",
+          icon: "error",
+          confirmButtonColor: "#b23a48"
+        });
+      });
+    });
+  }
+  </script>
+  <script>
+    // 🔄 Refrescar automáticamente cada 10 segundos
+    setInterval(() => {
+      fetch(window.location.href, { cache: "no-store" })
+        .then(response => response.text())
+        .then(html => {
+          // Crear un DOM temporal para obtener solo el contenedor actualizado
+          const parser = new DOMParser();
+          const newDoc = parser.parseFromString(html, "text/html");
+          const nuevosPedidos = newDoc.querySelector("#pedidos");
+
+          if (nuevosPedidos) {
+            document.querySelector("#pedidos").innerHTML = nuevosPedidos.innerHTML;
+          }
+        })
+        .catch(err => console.error("❌ Error al actualizar pedidos:", err));
+    }, 10000); // cada 10 segundos (10000 ms)
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</body>
+</html>

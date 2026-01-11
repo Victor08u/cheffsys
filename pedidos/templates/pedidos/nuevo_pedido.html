@@ -321,12 +321,22 @@
   <form method="POST">
     {% csrf_token %}
     <label>Cliente:</label>
-    <select name="cliente">
-      <option value="">-- Seleccione Cliente --</option>
-      {% for cliente in clientes %}
-        <option value="{{ cliente.id }}">{{ cliente.nombre }} {{ cliente.apellido }} ({{ cliente.telefono }})</option>
-      {% endfor %}
-    </select>
+    <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap; position:relative;">
+      <input type="text" id="cliente_input" name="cliente" placeholder="Buscar cliente..." autocomplete="off" style="flex:1; padding:10px; border-radius:8px; border:1.5px solid var(--marron);">
+      <div id="cliente_suggestions" style="position:absolute; top:42px; left:0; right:140px; background:#fff; border:1px solid #ccc; max-height:150px; overflow-y:auto; z-index:100;"></div>
+      <button type="button" id="btn_nuevo_cliente" style="
+          background-color: var(--verde);
+          color: var(--blanco);
+          border: none;
+          padding: 10px 16px;
+          border-radius: 8px;
+          cursor: pointer;
+          font-weight: bold;
+          transition: 0.3s;
+        ">
+        ➕ Nuevo
+      </button>
+    </div>
 
     <label>Tipo de entrega:</label>
     <select name="tipo_entrega">
@@ -361,6 +371,41 @@
   </footer>
 
   <script>
+  const input = document.getElementById('cliente_input');
+const suggestions = document.getElementById('cliente_suggestions');
+
+// Lista de clientes del servidor
+const clientesData = [
+  {% for c in clientes %}
+    { id: {{ c.id }}, nombre: "{{ c.nombre }} {{ c.apellido }}", telefono: "{{ c.telefono }}" },
+  {% endfor %}
+];
+
+// Filtrado y sugerencias
+input.addEventListener('input', () => {
+  const val = input.value.toLowerCase();
+  suggestions.innerHTML = '';
+  if (!val) return;
+  const matches = clientesData.filter(c => c.nombre.toLowerCase().includes(val) || c.telefono.includes(val));
+  matches.forEach(c => {
+    const div = document.createElement('div');
+    div.textContent = `${c.nombre} (${c.telefono})`;
+    div.style.padding = '5px 10px';
+    div.style.cursor = 'pointer';
+    div.addEventListener('click', () => {
+      input.value = c.id; // envía el ID al backend
+      suggestions.innerHTML = '';
+    });
+    suggestions.appendChild(div);
+  });
+});
+
+// Cerrar sugerencias si se hace click fuera
+document.addEventListener('click', (e) => {
+  if (!input.contains(e.target) && !suggestions.contains(e.target)) {
+    suggestions.innerHTML = '';
+  }
+});
     let itemCount = 0;
     const productosPorCategoria = {
         'hamburguesa': [
@@ -380,6 +425,13 @@
         'bebida': [
         {% for p in productos %}
             {% if p.categoria == 'bebida' %}
+            {"id": {{ p.id }}, "nombre": "{{ p.nombre|escapejs }}", "precio": {{ p.precio|floatformat:0 }} },
+            {% endif %}
+        {% endfor %}
+        ],
+        'menu': [
+        {% for p in productos %}
+            {% if p.categoria == 'menu' %}
             {"id": {{ p.id }}, "nombre": "{{ p.nombre|escapejs }}", "precio": {{ p.precio|floatformat:0 }} },
             {% endif %}
         {% endfor %}
@@ -406,6 +458,7 @@
           <option value="hamburguesa">🍔 Hamburguesa</option>
           <option value="papas">🍟 Papas</option>
           <option value="bebida">🥤 Bebida</option>
+          <option value="menu">🍽️ Menú</option>
           <option value="otro">🍽️ Otro</option>
         </select>
 
@@ -477,18 +530,88 @@
     }
   </script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-  {% if pedido_guardado %}
-  <script>
-  Swal.fire({
-    title: "¡Pedido guardado!",
-    text: "El pedido se registró correctamente 🎉",
-    icon: "success",
+  
+{% if pedido_guardado %}
+<script>
+Swal.fire({
+  title: "¡Pedido guardado!",
+  text: "El pedido se registró correctamente 🎉",
+  icon: "success",
+  confirmButtonColor: "#4B2E07",
+  confirmButtonText: "Aceptar"
+}).then(() => {
+  window.location.href = "/";  // Redirección después de aceptar
+});
+</script>
+{% endif %}
+<script>
+document.getElementById("btn_nuevo_cliente").addEventListener("click", async () => {
+  const { value: formValues } = await Swal.fire({
+    title: "Nuevo Cliente",
+    html: `
+      <input id="swal_nombre" class="swal2-input" placeholder="Nombre">
+      <input id="swal_apellido" class="swal2-input" placeholder="Apellido">
+      <input id="swal_telefono" class="swal2-input" placeholder="Teléfono">
+    `,
+    focusConfirm: false,
+    showCancelButton: true,
+    confirmButtonText: "Guardar",
     confirmButtonColor: "#4B2E07",
-    confirmButtonText: "Aceptar"
-  }).then(() => {
-    window.location.href = "/";  // Redirección después de aceptar
+    cancelButtonText: "Cancelar",
+    preConfirm: () => {
+      const nombre = document.getElementById("swal_nombre").value.trim();
+      const apellido = document.getElementById("swal_apellido").value.trim();
+      const telefono = document.getElementById("swal_telefono").value.trim();
+      if (!nombre || !apellido || !telefono) {
+        Swal.showValidationMessage("⚠️ Todos los campos son obligatorios");
+        return false;
+      }
+      return { nombre, apellido, telefono };
+    }
   });
-  </script>
-  {% endif %}
+
+  if (formValues) {
+    try {
+      const response = await fetch("/clientes/nuevo_ajax/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRFToken": document.querySelector('[name=csrfmiddlewaretoken]').value
+        },
+        body: JSON.stringify(formValues)
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        Swal.fire({
+          title: "Cliente agregado ✅",
+          text: `${data.nombre} ${data.apellido} se agregó correctamente.`,
+          icon: "success",
+          confirmButtonColor: "#4B2E07"
+        });
+        // Agregar al array de clientes para autocompletar
+        clientesData.push({id:data.id, nombre:`${data.nombre} ${data.apellido}`, telefono:data.telefono});
+        // Seleccionar automáticamente
+        input.value = data.id;
+      } else {
+        Swal.fire("Error", data.error || "No se pudo guardar el cliente", "error");
+      }
+    } catch (err) {
+      Swal.fire("Error", "Error al conectar con el servidor", "error");
+    }
+  }
+});
+</script>
+{% if error %}
+<script>
+Swal.fire({
+  title: "Error al guardar",
+  text: "{{ error|escapejs }}",
+  icon: "error",
+  confirmButtonColor: "#4B2E07",
+  confirmButtonText: "Entendido"
+});
+</script>
+{% endif %}
 </body>
 </html>
