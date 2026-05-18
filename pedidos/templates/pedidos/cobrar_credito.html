@@ -1,0 +1,297 @@
+{% load static %}
+{% load humanize %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pedidos Crédito - Cobro</title>
+<style>
+    :root {
+      --negro: #000000;
+      --blanco: #FFFFFF;
+      --marron: #A36A2B;
+      --beige: #E2C9A5;
+      --violeta: #4B2E07;
+      --verde: #2e7d32;
+      --rojo: #B23A48;
+      --sombra-suave: rgba(0, 0, 0, 0.1);
+    }
+
+    body {
+      font-family: 'Poppins', 'Segoe UI', sans-serif;
+      background: linear-gradient(160deg, var(--beige), #f5e4cf);
+      color: var(--violeta);
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      overflow-x: hidden;
+    }
+
+    /* HEADER */
+    header {
+      width: 100%;
+      background-color: var(--marron);
+      color: var(--blanco);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 25px 40px;
+      box-shadow: 0 6px 14px var(--sombra-suave);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    /* Contenedor centrado para el título */
+    .header-center {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      text-align: center;
+    }
+
+    header h1 {
+      font-size: 2.6rem;
+      margin: 0;
+      text-align: center;
+      letter-spacing: 1px;
+    }
+
+    /* Botón Volver */
+    .btn-volver {
+      background-color: var(--violeta);
+      color: var(--blanco);
+      border: none;
+      padding: 10px 20px;
+      font-size: 1.3rem;
+      font-weight: 600;
+      border-radius: 14px;
+      cursor: pointer;
+      transition: 0.3s;
+      box-shadow: 0 4px 10px var(--sombra-suave);
+    }
+
+    .btn-volver:hover {
+      background-color: var(--beige);
+      color: var(--violeta);
+      transform: scale(1.05);
+    }
+
+    /* Logo Amigo Cheff */
+    .logo-cheff {
+      width: 90px;
+      height: auto;
+      filter: brightness(0) invert(1);
+      transition: transform 0.3s ease;
+    }
+
+    .logo-cheff:hover {
+      transform: scale(1.05);
+    }
+
+  /* ===== FILTRO CLIENTE ===== */
+  .filtro-container {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 15px;
+      background-color: #ffffff22;
+      padding: 14px 24px;
+      border-radius: 18px;
+      backdrop-filter: blur(5px);
+      margin-top: 20px;
+    }
+
+    .filtro-container label {
+      font-size: 1.4rem;
+      font-weight: 600;
+    }
+
+  .filtro-container select {
+    width: 100%;
+    padding:10px 12px;
+    border-radius:8px;
+    border:1.5px solid var(--marron);
+    font-size:1rem;
+  }
+
+  /* ===== PEDIDOS TARJETAS ===== */
+  .pedidos-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+    gap: 30px;
+    width: 90%;
+    max-width: 1200px;
+    margin-bottom: 60px;
+  }
+  .pedido-card {
+    background: var(--blanco);
+    border-radius: 25px;
+    padding: 25px 20px;
+    box-shadow: 0 8px 25px var(--sombra);
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+  .pedido-card:hover {
+    transform: scale(1.03);
+    box-shadow: 0 12px 30px var(--sombra);
+  }
+  .pedido-card::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 8px;
+    background: linear-gradient(90deg, var(--marron), var(--violeta));
+    border-top-left-radius: 25px;
+    border-top-right-radius: 25px;
+  }
+  .pedido-header {
+    font-weight: 800;
+    font-size: 1.6rem;
+    color: var(--marron);
+    margin-bottom: 10px;
+    text-transform: uppercase;
+  }
+  .pedido-fecha {
+    color: #7a5d3a;
+    font-size: 1.2rem;
+    margin-bottom: 8px;
+  }
+  .detalle-item {
+    border-left: 4px solid var(--marron);
+    padding-left: 12px;
+    margin-bottom: 10px;
+  }
+  .detalle-producto {
+    font-style: italic;
+    font-weight: 600;
+    color: var(--violeta);
+    font-size: 1.2rem;
+  }
+  .detalle-observacion {
+    font-size: 1.1rem;
+    color: var(--marron);
+    margin-left: 8px;
+  }
+  .observacion-general {
+    margin-top: 12px;
+    background: #f9f3ec;
+    padding: 12px;
+    border-radius: 15px;
+    font-weight: 700;
+    font-size: 1.2rem;
+    color: var(--marron);
+    box-shadow: inset 0 2px 6px rgba(0,0,0,0.05);
+  }
+  .total-pedido {
+    margin-top: 10px;
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--verde);
+  }
+  .btn-cobrar {
+    background-color: var(--verde);
+    color: var(--blanco);
+    border-radius: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    padding: 10px 18px;
+    margin-top: 15px;
+    box-shadow: 0 4px 10px var(--sombra);
+    transition: 0.3s;
+  }
+  .btn-cobrar:hover { background-color:#218838; transform: scale(1.05); }
+
+  .no-pedidos {
+    font-size: 1.8rem;
+    color: var(--violeta);
+    text-align: center;
+    margin-top: 60px;
+    font-weight: bold;
+  }
+
+  footer {
+    text-align:center;
+    padding:25px;
+    background: var(--violeta);
+    color: var(--beige);
+    font-size:0.9rem;
+    width:100%;
+    box-shadow:0 -4px 12px var(--sombra);
+  }
+
+  @media (max-width: 700px) {
+    .pedido-card { padding: 20px 15px; }
+    header { flex-direction: column; gap:10px; }
+    .logo-cheff { display:none; }
+    .filtro-container { align-items: stretch; }
+  }
+
+</style>
+</head>
+<body>
+
+<header>
+  <button class="btn-volver" onclick="window.location.href='/'">⬅️ Volver</button>
+  <h1>📄 Cobro Pedidos Crédito</h1>
+  <img src="{% static 'img/moritech.png' %}" alt="Moritech" class="logo-cheff">
+</header>
+
+<form method="GET" id="filtro_cliente" class="filtro-container">
+  <label>Filtrar por cliente:</label>
+  <select name="cliente" onchange="document.getElementById('filtro_cliente').submit();">
+    <option value="">-- Seleccione cliente --</option>
+    {% for c in clientes %}
+      <option value="{{ c.id }}" {% if request.GET.cliente == c.id|stringformat:"s" %}selected{% endif %}>
+        {{ c.nombre }} {{ c.apellido }}
+      </option>
+    {% endfor %}
+  </select>
+</form>
+
+{% if pedidos_credito %}
+<form method="POST" action="{% url 'cobrar_credito_post' %}" class="pedidos-container">
+  {% csrf_token %}
+  {% for p in pedidos_credito %}
+  <div class="pedido-card">
+    <div class="pedido-header">Pedido #{{ p.id }} - {{ p.cliente.nombre }} {{ p.cliente.apellido }}</div>
+    <div class="pedido-fecha">🕒 {{ p.fecha|date:"d/m/Y H:i" }}</div>
+    {% for detalle in p.detalles.all %}
+      <div class="detalle-item">
+        {% if detalle.producto %}
+          <span class="detalle-producto">🍔 {{ detalle.producto.nombre }} x{{ detalle.cantidad }}</span>
+        {% elif detalle.tamano %}
+          <span class="detalle-producto">🍕 Pizza {{ detalle.tamano.nombre }}
+            {% if detalle.sabores.all %}- {% for s in detalle.sabores.all %}{{ s.nombre }}{% if not forloop.last %}, {% endif %}{% endfor %}{% endif %}
+          </span>
+        {% endif %}
+        {% if detalle.observacion %}
+          <div class="detalle-observacion">📝 {{ detalle.observacion }}</div>
+        {% endif %}
+      </div>
+    {% endfor %}
+    {% if p.observacion_general %}
+      <div class="observacion-general">⚠️ {{ p.observacion_general }}</div>
+    {% endif %}
+    {% if p.total %}
+      <div class="total-pedido">💰 Total: {{ p.total|floatformat:0|intcomma }} Gs</div>
+    {% endif %}
+    <input type="checkbox" name="pedidos_ids" value="{{ p.id }}" style="margin-top:12px;"> Seleccionar
+  </div>
+  {% endfor %}
+  <button type="submit" class="btn-cobrar">✅ Cobrar seleccionado(s)</button>
+</form>
+{% else %}
+<div class="no-pedidos">No hay pedidos crédito pendientes.</div>
+{% endif %}
+
+
+
+</body>
+</html>

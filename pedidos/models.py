@@ -27,6 +27,7 @@ class Producto(models.Model):
         ('hamburguesa', 'Hamburguesa'),
         ('papas', 'Papas'),
         ('bebida', 'Bebida'),
+        ('menu', 'Menú'),
         ('otro', 'Otro'),
     ]
 
@@ -37,12 +38,29 @@ class Producto(models.Model):
 
     def __str__(self):
         return f"{self.nombre} ({self.categoria})"
+
+from django.utils import timezone
+class MenuDiario(models.Model):
+    imagen = models.ImageField(upload_to='menus_diarios/')
+    fecha = models.DateField(default=timezone.now)
+
+    def __str__(self):
+        return f"Menú del {self.fecha}"
+
 class CierreCaja(models.Model):
     fecha_hora = models.DateTimeField(auto_now_add=True)
+    saldo_anterior = models.DecimalField(max_digits=12, decimal_places=0, default=0)
+    saldo_efectivo_anterior = models.DecimalField(max_digits=12, decimal_places=0, default=0)
+    saldo_bancario_anterior = models.DecimalField(max_digits=12, decimal_places=0, default=0)
+    # NUEVOS CAMPOS
+    saldo_efectivo = models.DecimalField(max_digits=12, decimal_places=0, default=0)
+    saldo_bancario = models.DecimalField(max_digits=12, decimal_places=0, default=0)
     total_ventas = models.DecimalField(max_digits=12, decimal_places=0, default=0)
-    
+    total_gastos = models.DecimalField(max_digits=12, decimal_places=0, default=0)
+    saldo_actual = models.DecimalField(max_digits=12, decimal_places=0, default=0)
+
     def __str__(self):
-        return f"Cierre {self.fecha_hora.strftime('%d/%m/%Y %H:%M')}"
+        return f"Cierre {self.id} - {self.fecha_hora.strftime('%d/%m/%Y %H:%M')}"
 class Cliente(models.Model):
     nombre = models.CharField(max_length=100, blank=True, null=True)
     apellido = models.CharField(max_length=100, blank=True, null=True)
@@ -71,6 +89,10 @@ class Pedido(models.Model):
     observacion_general = models.TextField(blank=True, null=True)
     ind_bancario = models.BooleanField(default=False)
     cierre_caja = models.ForeignKey(CierreCaja, on_delete=models.SET_NULL, blank=True, null=True)
+    condicion_venta = models.CharField(
+        max_length=20,
+        choices=[('contado', 'Contado'), ('credito', 'Crédito')],
+        default='contado')
 
     def __str__(self):
         return f"Pedido #{self.id} - {self.fecha.strftime('%d/%m/%Y %H:%M')}"
@@ -145,8 +167,19 @@ def enviar_whatsapp(cliente, mensaje):
     return None
 
 # 🔁 Señales: recalcula el total al guardar o eliminar detalles
-@receiver([post_save, post_delete], sender=DetallePedido)
-def actualizar_total_pedido(sender, instance, **kwargs):
-    instance.pedido.calcular_total()
+#@receiver([post_save, post_delete], sender=DetallePedido)
+#def actualizar_total_pedido(sender, instance, **kwargs):
+ #   instance.pedido.calcular_total()
 
 
+class Gasto(models.Model):
+    descripcion = models.CharField(max_length=200)
+    monto = models.DecimalField(max_digits=10, decimal_places=2)
+    fecha = models.DateTimeField(auto_now_add=True) 
+    cerrado = models.BooleanField(default=False)
+    cierre_caja = models.ForeignKey('CierreCaja', on_delete=models.SET_NULL, null=True, blank=True)
+    ind_bancario = models.BooleanField(default=False)
+
+
+    def __str__(self):
+        return f"{self.descripcion} - Gs. {self.monto:,.0f}"

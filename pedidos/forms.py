@@ -1,5 +1,5 @@
 #para carga de clientes antes del pedido
-from .models import Cliente, Sabor, Producto
+from .models import Cliente, Gasto, Sabor, Producto
 from .utils import enviar_whatsapp
 from django import forms
 class ClienteForm(forms.ModelForm):
@@ -62,3 +62,24 @@ class SaborForm(forms.ModelForm):
             'descripcion': 'Ingrese una descripción breve del sabor.',
         }
 
+class GastoForm(forms.ModelForm):
+    class Meta:
+        model = Gasto
+        fields = ['descripcion', 'monto', 'ind_bancario']
+        widgets = {
+            'descripcion': forms.TextInput(attrs={'class': 'form-control'}),
+            'monto': forms.NumberInput(attrs={'class': 'form-control'}),
+            'ind_bancario': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+        }
+        labels = {
+            'descripcion': 'Descripción del Gasto',
+            'monto': 'Monto (Gs)',
+            'ind_bancario': '¿Gasto bancario?',
+        }
+
+from .models import MenuDiario
+
+class MenuDiarioForm(forms.ModelForm):
+    class Meta:
+        model = MenuDiario
+        fields = ['imagen']

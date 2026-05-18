@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Login - Amigo Cheff</title>
+
+<style>
+body {
+  margin:0;
+  font-family:Poppins, sans-serif;
+  background: linear-gradient(135deg, #A36A2B, #4B2E07);
+  height:100vh;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+}
+
+.box {
+  background:white;
+  padding:40px;
+  border-radius:20px;
+  width:320px;
+  box-shadow:0 10px 30px rgba(0,0,0,.3);
+  text-align:center;
+}
+
+h2 {
+  margin-bottom:20px;
+  color:#4B2E07;
+}
+
+input {
+  width:100%;
+  padding:10px;
+  margin:10px 0;
+  border-radius:10px;
+  border:1px solid #ccc;
+}
+
+button {
+  width:100%;
+  padding:10px;
+  border:none;
+  border-radius:10px;
+  background:#A36A2B;
+  color:white;
+  font-weight:bold;
+  cursor:pointer;
+}
+
+button:hover {
+  background:#4B2E07;
+}
+</style>
+</head>
+
+<body>
+
+<div class="box">
+  <h2>Amigo Cheff</h2>
+
+  <form method="post">
+    {% csrf_token %}
+
+    <input type="text" name="username" placeholder="Usuario">
+    <input type="password" name="password" placeholder="Contraseña">
+
+    <button type="submit">Iniciar sesión</button>
+  </form>
+</div>
+
+</body>
+</html>

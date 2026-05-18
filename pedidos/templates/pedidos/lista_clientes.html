@@ -1,0 +1,264 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lista de Clientes</title>
+
+<style>
+  :root {
+    --negro:#000;
+    --blanco:#fff;
+    --marron:#A36A2B;
+    --beige:#F6E8D5;
+    --violeta:#4B2E07;
+    --verde:#28a745;
+    --sombra:rgba(0,0,0,0.15);
+  }
+
+  body{
+    font-family:'Poppins','Segoe UI',sans-serif;
+    background:linear-gradient(160deg,var(--beige),#fdfbf8);
+    margin:0;
+    color:var(--violeta);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    min-height:100vh;
+  }
+
+  /* HEADER */
+  header{
+    width:100%;
+    background:var(--marron);
+    color:var(--blanco);
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:2px 10px;
+    box-shadow:0 6px 16px var(--sombra);
+    position:sticky;
+    top:0;
+    z-index:100;
+  }
+
+  header h1{
+    font-size:2.4rem;
+    margin:0;
+    text-align:center;
+    flex-grow:1;
+  }
+
+  header img{
+    width:80px;
+    filter:brightness(0) invert(1);
+  }
+
+  .btn-volver{
+    background:var(--violeta);
+    color:var(--blanco);
+    border:none;
+    padding:10px 20px;
+    border-radius:10px;
+    cursor:pointer;
+    font-weight:bold;
+    box-shadow:0 4px 10px var(--sombra);
+    transition:.3s;
+  }
+
+  .btn-volver:hover{
+    background:var(--marron);
+    transform:scale(1.05);
+  }
+
+  /* FILTRO SUPERIOR */
+  .filtro-contenedor{
+    width:95%;
+    margin:30px auto 10px;
+    display:flex;
+    justify-content:space-between;
+    gap:12px;
+    flex-wrap:wrap;
+  }
+
+  .filtro-form{
+    display:flex;
+    gap:12px;
+    background:var(--blanco);
+    padding:12px 16px;
+    border-radius:14px;
+    box-shadow:0 6px 20px var(--sombra);
+  }
+
+  .filtro-form input{
+    padding:8px 12px;
+    border-radius:10px;
+    border:1.5px solid var(--marron);
+    font-size:1rem;
+  }
+
+  .filtro-form button{
+    background:var(--verde);
+    color:var(--blanco);
+    border:none;
+    padding:8px 16px;
+    border-radius:10px;
+    font-weight:bold;
+    cursor:pointer;
+  }
+
+  .btn-nuevo{
+    background:var(--marron);
+    color:var(--blanco);
+    padding:12px 18px;
+    border-radius:14px;
+    font-weight:bold;
+    text-decoration:none;
+    box-shadow:0 4px 10px var(--sombra);
+    transition:.3s;
+  }
+
+  .btn-nuevo:hover{
+    background:var(--violeta);
+    transform:scale(1.05);
+  }
+
+  /* TABLA */
+  .tabla-contenedor{
+    width:95%;
+    margin:20px auto 50px;
+  }
+
+  .tabla-cabecera{
+    display:grid;
+    grid-template-columns:1fr 2fr 1.5fr 1.2fr;
+    background:var(--marron);
+    color:var(--blanco);
+    padding:16px;
+    border-radius:14px;
+    font-weight:bold;
+    box-shadow:0 4px 12px var(--sombra);
+  }
+
+  .tabla-fila{
+    display:grid;
+    grid-template-columns:1fr 2fr 1.5fr 1.2fr;
+    background:var(--blanco);
+    margin-top:12px;
+    padding:18px;
+    border-radius:14px;
+    box-shadow:0 4px 14px rgba(0,0,0,.08);
+    transition:.25s;
+    align-items:center;
+  }
+
+  .tabla-fila:hover{
+    transform:scale(1.02);
+    background:#fcf9f4;
+  }
+
+  .btn-editar{
+    background:var(--verde);
+    color:var(--blanco);
+    padding:10px 14px;
+    border-radius:12px;
+    text-decoration:none;
+    font-weight:bold;
+    box-shadow:0 4px 10px var(--sombra);
+    transition:.3s;
+    text-align:center;
+  }
+
+  .btn-editar:hover{
+    background:#1f7a33;
+    transform:scale(1.07);
+  }
+
+  /* FOOTER */
+  footer{
+    margin-top:auto;
+    width:100%;
+    background:var(--violeta);
+    color:var(--beige);
+    text-align:center;
+    padding:25px;
+    box-shadow:0 -4px 12px var(--sombra);
+  }
+
+  footer img{
+    width:28px;
+    vertical-align:middle;
+    margin-right:8px;
+  }
+
+  @media(max-width:768px){
+    .tabla-cabecera,.tabla-fila{
+      grid-template-columns:1fr;
+      gap:8px;
+    }
+    .filtro-contenedor{
+      flex-direction:column;
+    }
+  }
+</style>
+</head>
+
+<body>
+
+<header>
+  <button class="btn-volver" onclick="window.location.href='{% url 'inicio' %}'">⬅️ Volver</button>
+  <h1>👥 Lista de Clientes</h1>
+  <img src="{% static 'img/cheff.png' %}">
+</header>
+
+<!-- FILTRO + NUEVO -->
+<div class="filtro-contenedor">
+
+  <form method="GET" class="filtro-form">
+    <input type="text" name="q" placeholder="Buscar por nombre..."
+           value="{{ request.GET.q }}">
+    <button type="submit">Buscar</button>
+  </form>
+
+  <a href="{% url 'carga_clientes' %}" class="btn-nuevo">➕ Nuevo Cliente</a>
+</div>
+
+<!-- TABLA -->
+<div class="tabla-contenedor">
+
+  <div class="tabla-cabecera">
+    <div>ID</div>
+    <div>Nombre</div>
+    <div>Teléfono</div>
+    <div>Acciones</div>
+  </div>
+
+  {% for cliente in clientes %}
+  <div class="tabla-fila">
+    <div>{{ cliente.id }}</div>
+    <div>{{ cliente.nombre }} {{ cliente.apellido }}</div>
+    <div>{{ cliente.telefono }}</div>
+    <div>
+      <a href="{% url 'editar_cliente' cliente.id %}" class="btn-editar">
+        ✏ Editar
+      </a>
+    </div>
+  </div>
+  {% empty %}
+  <div class="tabla-fila">
+    <div style="grid-column:1 / -1; text-align:center;">
+      No hay clientes registrados
+    </div>
+  </div>
+  {% endfor %}
+
+</div>
+
+<footer>
+  <img src="{% static 'img/moritech.png' %}">
+  Desarrollado por Moritech © 2025
+</footer>
+
+</body>
+</html>

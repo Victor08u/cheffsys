@@ -3,238 +3,347 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>Amigo Cheff - Inicio</title>
+<title>Amigo Cheff | Panel Principal</title>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+
 <style>
 :root {
-    --marron: #A36A2B;
-    --beige: #E2C9A5;
-    --violeta: #4B2E07;
-    --blanco: #FFFFFF;
-    --negro: #000000;
-    --sombra: rgba(0, 0, 0, 0.25);
-    --hover-shadow: rgba(0, 0, 0, 0.4);
-    --radius: 20px;
-    --transition-speed: 0.3s;
+  --marron: #A36A2B;
+  --beige: #F6E8D5;
+  --violeta: #4B2E07;
+  --blanco: #FFFFFF;
+  --sombra: rgba(0,0,0,.2);
+  --radius: 22px;
+  --transition: .35s ease;
 }
 
 * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
 
 body {
-    font-family: 'Poppins', sans-serif;
-    background: linear-gradient(180deg, var(--marron) 0%, var(--violeta) 100%);
-    color: var(--blanco);
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    overflow-x: hidden;
+  font-family: 'Poppins', sans-serif;
+  background: linear-gradient(160deg, var(--beige), #fdfbf8);
+  color: var(--violeta);
+  min-height: 100vh;
 }
 
-/* HEADER */
+/* ================= HEADER / HERO ================= */
 header {
-    text-align: center;
-    padding: 60px 20px 40px;
-    position: relative;
+  background: linear-gradient(135deg, var(--marron), var(--violeta));
+  color: var(--blanco);
+  padding: 50px 20px 70px;
+  text-align: center;
+  position: relative;
+  box-shadow: 0 10px 25px var(--sombra);
 }
 
 header img {
-    width: 140px;
-    max-width: 30vw;
-    filter: brightness(0) invert(1);
-    transition: transform var(--transition-speed) ease;
-}
-
-header img:hover {
-    transform: scale(1.08);
+  width: 120px;
+  filter: brightness(0) invert(1);
+  margin-bottom: 15px;
 }
 
 header h1 {
-    font-size: 2.8rem;
-    color: var(--beige);
-    margin: 15px 0 5px;
-    letter-spacing: 1.2px;
-    text-transform: uppercase;
-    font-weight: 700;
+  font-size: 2.8rem;
+  letter-spacing: 1px;
 }
 
 header p {
-    font-size: 1.1rem;
-    color: var(--blanco);
-    opacity: 0.9;
+  opacity: .9;
+  font-size: 1.1rem;
+  margin-top: 8px;
 }
 
-/* CONTENEDOR PRINCIPAL */
+/* ================= MAIN ================= */
 main {
-    flex: 1;
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+  max-width: 1200px;
+  margin: -50px auto 0;
+  padding: 0 20px 60px;
 }
 
-/* SECCIONES */
+/* ================= SECTIONS ================= */
 .section {
-    width: 90%;
-    max-width: 1000px;
-    background: rgba(255, 255, 255, 0.08);
-    border-radius: var(--radius);
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
-    padding: 40px 30px;
-    margin-bottom: 50px;
-    backdrop-filter: blur(8px);
-    text-align: center;
-    transition: transform var(--transition-speed) ease;
-}
-
-.section:hover {
-    transform: translateY(-5px);
+  margin-top: 60px;
 }
 
 .section h2 {
-    color: var(--beige);
-    font-size: 1.8rem;
-    margin-bottom: 25px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 1px;
+  font-size: 1.9rem;
+  margin-bottom: 25px;
+  color: var(--violeta);
+  position: relative;
 }
 
-/* GRID BOTONES */
-.btn-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 30px;
-    justify-items: center;
+.section h2::after {
+  content: '';
+  width: 80px;
+  height: 4px;
+  background: var(--marron);
+  position: absolute;
+  left: 0;
+  bottom: -8px;
+  border-radius: 10px;
 }
 
-/* BOTONES */
-.btn-card {
-    background-color: var(--beige);
-    color: var(--violeta);
-    width: 220px;
-    height: 130px;
-    border-radius: var(--radius);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    text-decoration: none;
-    font-size: 1.2rem;
-    font-weight: 600;
-    box-shadow: 0 6px 20px var(--sombra);
-    transition: all var(--transition-speed) ease;
+/* ================= GRID ================= */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 30px;
 }
 
-.btn-card span.icon {
-    font-size: 2.5rem;
-    margin-bottom: 10px;
+/* ================= CARD ================= */
+.card {
+  background: var(--blanco);
+  border-radius: var(--radius);
+  padding: 30px 25px;
+  box-shadow: 0 12px 30px var(--sombra);
+  text-decoration: none;
+  color: var(--violeta);
+  position: relative;
+  overflow: hidden;
+  transition: var(--transition);
 }
 
-.btn-card:hover {
-    transform: translateY(-8px) scale(1.05);
-    background-color: var(--violeta);
-    color: var(--beige);
-    box-shadow: 0 12px 30px var(--hover-shadow);
+.card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, var(--marron), var(--violeta));
+  opacity: 0;
+  transition: var(--transition);
 }
 
-/* DIVISOR VISUAL */
-.divider {
-    width: 60%;
-    height: 2px;
-    background-color: var(--beige);
-    opacity: 0.3;
-    margin: 50px auto;
+.card:hover::before {
+  opacity: .08;
 }
 
-/* FOOTER */
+.card:hover {
+  transform: translateY(-10px);
+}
+
+.card .icon {
+  font-size: 3rem;
+  margin-bottom: 15px;
+}
+
+.card h3 {
+  font-size: 1.3rem;
+  margin-bottom: 8px;
+}
+
+.card p {
+  font-size: .95rem;
+  opacity: .85;
+}
+
+/* ================= FOOTER ================= */
 footer {
-    background-color: var(--violeta);
-    padding: 20px;
-    text-align: center;
-    color: var(--beige);
-    box-shadow: 0 -4px 12px var(--sombra);
-    position: relative;
+  background: var(--violeta);
+  color: var(--beige);
+  text-align: center;
+  padding: 25px 15px;
 }
 
-footer p {
-    margin-bottom: 10px;
-    font-size: 1rem;
+footer .brand {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
 }
 
-footer .moritech {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 8px;
-    opacity: 0.9;
+footer img {
+  width: 28px;
+  border-radius: 6px;
 }
 
-footer .moritech img {
-    width: 30px;
-    height: 30px;
-    border-radius: 8px;
-    filter: drop-shadow(0 0 6px var(--sombra));
-    transition: transform var(--transition-speed) ease;
-}
-
-footer .moritech img:hover {
-    transform: scale(1.1);
-}
-
-/* RESPONSIVE */
+/* ================= RESPONSIVE ================= */
 @media (max-width: 600px) {
-    header img { width: 35vw; }
-    header h1 { font-size: 1.9rem; }
-    .section { padding: 25px 20px; }
-    .btn-card { width: 170px; height: 110px; font-size: 1.1rem; }
+  header h1 { font-size: 2.1rem; }
+  .card { padding: 25px 20px; }
 }
 </style>
 </head>
+
 <body>
 
 <header>
-    <img src="{% static 'img/cheff.png' %}" alt="Logo Amigo Cheff">
-    <h1>Bienvenido a Amigo Cheff</h1>
-    <p>Gestione fácilmente sus pedidos, ventas y productos</p>
+  <img src="{% static 'img/cheff.png' %}">
+  <h1>Amigo Cheff</h1>
+  <p>Panel de gestión gastronómica inteligente</p>
+  <div style="position:absolute; top:20px; right:20px;">
+  {% if user.is_authenticated %}
+
+    <span style="color:white; margin-right:10px;">
+      {{ user.username }}
+    </span>
+
+    <a href="{% url 'logout' %}" 
+       style="background:#fff; padding:8px 12px; border-radius:10px; text-decoration:none;">
+       Cerrar sesión
+    </a>
+
+  {% else %}
+
+    <a href="{% url 'login' %}" 
+       style="background:#fff; padding:8px 12px; border-radius:10px; text-decoration:none;">
+       Iniciar sesión
+    </a>
+
+  {% endif %}
+</div>
 </header>
 
 <main>
 
-    <!-- SECCIÓN OPERATIVA -->
-    <section class="section">
-        <h2>Gestión de Pedidos y Ventas</h2>
-        <div class="btn-grid">
-            <a href="{% url 'nuevo_pedido' %}" class="btn-card"><span class="icon">➕</span>Nuevo Pedido</a>
-            <a href="{% url 'lista_pedidos' %}" class="btn-card"><span class="icon">📋</span>Ver Pedidos</a>
-            <a href="{% url 'pedidos_del_dia' %}" class="btn-card"><span class="icon">📦</span>Pedidos del Día</a>
-            <a href="{% url 'caja_admin' %}" class="btn-card"><span class="icon">💰</span>Caja Administrador</a>
-        </div>
-    </section>
+  <!-- OPERACIONES -->
+  <!-- OPERACIONES -->
+<section class="section">
+  <h2>Operaciones</h2>
 
-    <div class="divider"></div>
+  <div class="grid">
 
-    <!-- SECCIÓN DE CARGAS -->
-    <section class="section">
-        <h2>Creación y Carga de Datos</h2>
-        <div class="btn-grid">
-            <a href="{% url 'carga_clientes' %}" class="btn-card"><span class="icon">👥</span>Carga Clientes</a>
-            <a href="{% url 'carga_productos' %}" class="btn-card"><span class="icon">🥫</span>Carga Productos</a>
-            <a href="{% url 'carga_sabores' %}" class="btn-card"><span class="icon">🍕</span>Carga Sabores</a>
-        </div>
-    </section>
+    {% if es_admin %}
+
+      <a href="{% url 'nuevo_pedido' %}" class="card">
+        <div class="icon">➕</div>
+        <h3>Nuevo Pedido</h3>
+        <p>Registrar pedidos de forma rápida y ordenada.</p>
+      </a>
+
+      <a href="{% url 'lista_pedidos' %}" class="card">
+        <div class="icon">👨‍🍳</div>
+        <h3>Vista Cocina</h3>
+        <p>Seguimiento en tiempo real de pedidos.</p>
+      </a>
+
+      <a href="{% url 'pedidos_del_dia' %}" class="card">
+        <div class="icon">📦</div>
+        <h3>Pedidos del Día</h3>
+        <p>Control diario de ventas y entregas.</p>
+      </a>
+
+      <a href="{% url 'caja_admin' %}" class="card">
+        <div class="icon">💰</div>
+        <h3>Caja</h3>
+        <p>Gestión financiera centralizada.</p>
+      </a>
+
+      <a href="{% url 'cobrar_credito' %}" class="card">
+        <div class="icon">💰</div>
+        <h3>Pedidos Créditos</h3>
+        <p>Pedidos a Crédito a Cobrar.</p>
+      </a>
+
+      <a href="{%url 'lista_pedidos_pendientes' %}" class="card">
+        <div class="icon">⏳</div>
+        <h3>Pedidos Pendientes</h3>
+        <p>Visualiza y administra pedidos en espera.</p>
+      </a>
+
+    {% endif %}
+
+    {% if es_cocina %}
+
+      <a href="{% url 'lista_pedidos' %}" class="card">
+        <div class="icon">👨‍🍳</div>
+        <h3>Vista Cocina</h3>
+        <p>Seguimiento en tiempo real de pedidos.</p>
+      </a>
+
+    {% endif %}
+
+  </div>
+</section>
+
+  <!-- ADMINISTRACIÓN -->
+  {% if es_admin %}
+  <section class="section">
+    <h2>Administración</h2>
+    <div class="grid">
+      <a href="{% url 'lista_clientes' %}" class="card">
+        <div class="icon">👥</div>
+        <h3>Clientes</h3>
+        <p>Base de clientes organizada.</p>
+      </a>
+
+      <a href="{% url 'listar_productos' %}" class="card">
+        <div class="icon">📦</div>
+        <h3>Productos</h3>
+        <p>Gestión de productos y precios.</p>
+      </a>
+
+      <a href="{% url 'carga_sabores' %}" class="card">
+        <div class="icon">🍕</div>
+        <h3>Sabores</h3>
+        <p>Administración de sabores y combinaciones.</p>
+      </a>
+
+      <a href="{% url 'carga_gastos' %}" class="card">
+        <div class="icon">🧾</div>
+        <h3>Gastos</h3>
+        <p>Registro de egresos del negocio.</p>
+      </a>
+
+      <a href="https://victor08u.github.io/MenuAmigoCheff/" target="_blank" class="card">
+        <div class="icon">🌐</div>
+        <h3>Ver Productos GitHub</h3>
+        <p>Accede al repositorio de productos de Amigo Cheff.</p>
+      </a>
+
+      <!-- MENÚ DIARIO -->
+      <a href="{% url 'menu_diario' %}" class="card">
+        <div class="icon">📸</div>
+        <h3>Menú Diario</h3>
+        <p>Agregar y visualizar los menús diarios mediante imágenes.</p>
+      </a>
+    </div>
+  </section>
+{% endif %}
+
+  <!-- REPORTES -->
+   {% if es_admin %}
+  <section class="section">
+    <h2>Reportes & Estadísticas</h2>
+    <div class="grid">
+      <a href="{% url 'balance_diario' %}" class="card">
+        <div class="icon">📊</div>
+        <h3>Balance Diario</h3>
+        <p>Resumen financiero del día.</p>
+      </a>
+
+      <a href="{% url 'balance_mensual' %}" class="card">
+        <div class="icon">📈</div>
+        <h3>Balance Mensual</h3>
+        <p>Análisis de rendimiento mensual.</p>
+      </a>
+
+      <a href="{% url 'ventas_detalladas' %}" class="card">
+        <div class="icon">🧮</div>
+        <h3>Ventas Detalladas</h3>
+        <p>Historial completo de ventas.</p>
+      </a>
+
+      <a href="{% url 'caja_actual' %}" class="card">
+        <div class="icon">💼</div>
+        <h3>Caja Actual</h3>
+        <p>Estado actual de la caja.</p>
+      </a>
+    </div>
+  </section>
+{% endif %}
 
 </main>
 
 <footer>
-    <p>© 2025 Amigo Cheff</p>
-    <div class="moritech">
-        <img src="{% static 'img/moritech.png' %}" alt="Moritech Logo">
-        <span>Desarrollado por Moritech</span>
-    </div>
+  © 2025 Amigo Cheff
+  <div class="brand">
+    <img src="{% static 'img/moritech.png' %}">
+    <span>Desarrollado por Moritech</span>
+  </div>
 </footer>
 
 </body>

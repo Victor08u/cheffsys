@@ -7,7 +7,6 @@
 <meta charset="UTF-8">
 <title>Arqueo de Cierre</title>
 <style>
-  /* ================= BODY ================= */
   body {
     font-family: 'Poppins', Arial, sans-serif;
     font-size: 14px;
@@ -17,7 +16,6 @@
     background: #fdf6f0;
   }
 
-  /* ================= HEADER ================= */
   header {
     text-align: center;
     margin-bottom: 40px;
@@ -36,7 +34,6 @@
     color: #7a5d3a;
   }
 
-  /* ================= TITLES ================= */
   h2 {
     margin-top: 40px;
     color: #A36A2B;
@@ -45,7 +42,6 @@
     font-size: 20px;
   }
 
-  /* ================= TABLAS ================= */
   table {
     width: 100%;
     border-collapse: collapse;
@@ -94,34 +90,31 @@
     color: #4B2E07;
   }
 
-  /* ================= TOTAL GENERAL ================= */
-  .total-general {
-    margin: 40px auto 0;
-    padding: 25px 40px;
-    width: max-content;
-    background-color: #2e7d32;
-    color: #fff;
-    font-size: 26px;
-    font-weight: 700;
+  /* Totales */
+  .totales-container {
+    margin-top: 50px;
     text-align: center;
-    border-radius: 20px;
-    box-shadow: 0 6px 15px rgba(0,0,0,0.2);
   }
 
-  /* ================= FOOTER ================= */
+  .total-box {
+    display: inline-block;
+    margin: 10px;
+    padding: 20px 40px;
+    border-radius: 15px;
+    color: #fff;
+    font-weight: bold;
+    box-shadow: 0 6px 15px rgba(0,0,0,0.15);
+  }
+
+  .total-ventas { background-color: #4B2E07; font-size: 22px; }
+  .total-gastos { background-color: #b71c1c; font-size: 20px; }
+  .total-sobrante { background-color: #2e7d32; font-size: 24px; }
+
   footer {
     margin-top: 60px;
     text-align: center;
     font-size: 12px;
     color: #777;
-  }
-
-  /* ================= RESPONSIVE ================= */
-  @media (max-width: 768px) {
-    header h1 { font-size: 26px; }
-    h2 { font-size: 18px; }
-    th, td { font-size: 13px; padding: 10px; }
-    .total-general { font-size: 22px; padding: 20px 30px; }
   }
 </style>
 </head>
@@ -153,7 +146,7 @@
     {% if pedido.detalles.all %}
     <tr>
       <td colspan="4" class="detalle">
-        <strong>Detalles:</strong>
+        <strong>Detalles:</strong><br>
         {% for detalle in pedido.detalles.all %}
           {% if detalle.producto %}
             {{ detalle.producto.nombre }} x{{ detalle.cantidad }}{% if detalle.observacion %} (Obs: {{ detalle.observacion }}){% endif %} <br>
@@ -196,7 +189,7 @@
     {% if pedido.detalles.all %}
     <tr>
       <td colspan="4" class="detalle">
-        <strong>Detalles:</strong>
+        <strong>Detalles:</strong><br>
         {% for detalle in pedido.detalles.all %}
           {% if detalle.producto %}
             {{ detalle.producto.nombre }} x{{ detalle.cantidad }}{% if detalle.observacion %} (Obs: {{ detalle.observacion }}){% endif %} <br>
@@ -219,9 +212,50 @@
   </tr>
 </table>
 
-<!-- TOTAL GENERAL DESTACADO -->
-<div class="total-general">
-  Total General: Gs {{ total|floatformat:0|intcomma }}
+<h2>Gastos del Día</h2>
+{% if gastos %}
+<table>
+  <tr>
+    <th>Descripción</th>
+    <th>Monto</th>
+  </tr>
+  {% for g in gastos %}
+  <tr>
+    <td>{{ g.descripcion }}</td>
+    <td>Gs {{ g.monto|floatformat:0|intcomma }}</td>
+  </tr>
+  {% endfor %}
+  <tr class="total-row">
+    <th>Total Gastos</th>
+    <td>Gs {{ total_gastos|floatformat:0|intcomma }}</td>
+  </tr>
+</table>
+{% else %}
+<p style="text-align:center;">No se registraron gastos en este cierre.</p>
+{% endif %}
+
+<div class="totales-container">
+
+  <div class="total-box" style="background-color:#795548; font-size:20px;">
+    Saldo Anterior: Gs {{ saldo_anterior|floatformat:0|intcomma }}
+  </div>
+
+  <div class="total-box total-ventas">
+    Total Ventas: Gs {{ total_ventas|floatformat:0|intcomma }}
+  </div>
+
+  <div class="total-box total-gastos">
+    Total Gastos: Gs {{ total_gastos|floatformat:0|intcomma }}
+  </div>
+
+  <div class="total-box total-sobrante">
+    Sobrante: Gs {{ total_final|floatformat:0|intcomma }}
+  </div>
+
+  <div class="total-box" style="background-color:#283593; font-size:22px;">
+    Saldo Actual: Gs {{ saldo_actual|floatformat:0|intcomma }}
+  </div>
+
 </div>
 
 {% else %}

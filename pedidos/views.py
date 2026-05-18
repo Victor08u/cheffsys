@@ -1,6 +1,6 @@
 from django.forms import ValidationError
 from django.shortcuts import get_object_or_404, render, redirect
-from .models import Sabor, Tamano, Producto, Pedido, DetallePedido, CierreCaja, Cliente
+from .models import Gasto, Sabor, Tamano, Producto, Pedido, DetallePedido, CierreCaja, Cliente
 from django.template.loader import render_to_string
 from django.http import JsonResponse
 from django.db.models.signals import post_save, post_delete
@@ -13,6 +13,7 @@ from .utils import enviar_whatsapp
 from django.urls import reverse
 import json
 from django.db import transaction
+from decimal import Decimal
 
 
 
@@ -22,6 +23,9 @@ from django.db import transaction
 
 
 
+
+
+@login_required
 def index(request):
     return render(request, 'pedidos/index.html')
 
@@ -36,46 +40,67 @@ def nuevo_pedido(request):
 
     if request.method == 'POST':
         tipo_entrega = request.POST.get('tipo_entrega')
+        condicion_venta = request.POST.get('condicion_venta', 'contado')  # <-- capturamos aquí
         cliente_id = request.POST.get('cliente', '')
         cliente = Cliente.objects.get(id=cliente_id) if cliente_id else None
         observacion_general = request.POST.get('observacion_general', '')
         ind_bancario = request.POST.get('ind_bancario') == '1'
 
+        items = int(request.POST.get('total_items', 0))
+        tiene_detalles = False
+
+        for i in range(1, items + 1):
+            tipo_item = request.POST.get(f'tipo_item_{i}')
+            if tipo_item == 'pizza':
+                if request.POST.getlist(f'sabores_{i}'):
+                    tiene_detalles = True
+            else:
+                if request.POST.get(f'producto_{i}'):
+                    tiene_detalles = True
+
+        if not tiene_detalles:
+            return render(request, 'pedidos/nuevo_pedido.html', {
+                'tamanos': tamanos,
+                'sabores': sabores,
+                'productos': productos,
+                'clientes': clientes,
+                'error': '⚠️ Debes agregar al menos un ítem al pedido.'
+            })
+
+        # ✅ recién acá se crea el pedido
         pedido = Pedido.objects.create(
             tipo_entrega=tipo_entrega,
+            condicion_venta=condicion_venta,  # <-- guardamos aquí
             cliente=cliente,
             observacion_general=observacion_general,
             ind_bancario=ind_bancario
         )
 
-        items = int(request.POST.get('total_items', 0))
         for i in range(1, items + 1):
             tipo_item = request.POST.get(f'tipo_item_{i}')
             if tipo_item == 'pizza':
-                tamano_id = request.POST.get(f'tamano_{i}')
                 sabores_ids = request.POST.getlist(f'sabores_{i}')
-                observacion = request.POST.get(f'observacion_{i}', '')
-                con_borde = request.POST.get(f'borde_{i}') == '1'
-                tamano = Tamano.objects.get(id=tamano_id)
+                if not sabores_ids:
+                    continue
 
+                tamano = Tamano.objects.get(id=request.POST.get(f'tamano_{i}'))
                 detalle = DetallePedido.objects.create(
                     pedido=pedido,
                     tamano=tamano,
-                    con_borde=con_borde,
-                    observacion=observacion
+                    con_borde=request.POST.get(f'borde_{i}') == '1',
+                    observacion=request.POST.get(f'observacion_{i}', '')
                 )
                 detalle.sabores.set(sabores_ids)
             else:
                 producto_id = request.POST.get(f'producto_{i}')
-                cantidad = int(request.POST.get(f'cantidad_{i}', 1))
-                observacion = request.POST.get(f'observacion_{i}', '')
-                producto = Producto.objects.get(id=producto_id)
+                if not producto_id:
+                    continue
 
                 DetallePedido.objects.create(
                     pedido=pedido,
-                    producto=producto,
-                    cantidad=cantidad,
-                    observacion=observacion
+                    producto=Producto.objects.get(id=producto_id),
+                    cantidad=int(request.POST.get(f'cantidad_{i}', 1)),
+                    observacion=request.POST.get(f'observacion_{i}', '')
                 )
 
         pedido.calcular_total()
@@ -108,7 +133,7 @@ def editar_pedido(request, pedido_id):
 
     # Evitar edición si el pedido está cerrado
     if pedido.estado == 'cerrado':
-        return redirect('url_a_detalle_pedido', pedido_id=pedido.id)
+        return redirect('pedidos_del_dia')
 
     if request.method == 'POST':
         tipo_entrega = request.POST.get('tipo_entrega')
@@ -181,10 +206,17 @@ def editar_pedido(request, pedido_id):
 
                     detalles_a_mantener.add(detalle.id)
 
-                # --- 3. Eliminar ítems no enviados ---
+                # --- 3. Eliminar ítems marcados como eliminados ---
+                eliminados_raw = request.POST.get('detalles_eliminados', '')
+                ids_eliminados = [int(i) for i in eliminados_raw.split(',') if i.isdigit()]
+                if ids_eliminados:
+                    DetallePedido.objects.filter(pedido=pedido, id__in=ids_eliminados).delete()
+
+                # --- 4. Eliminar ítems no enviados (por seguridad adicional) ---
                 DetallePedido.objects.filter(pedido=pedido).exclude(id__in=list(detalles_a_mantener)).delete()
 
-                # --- 4. Recalcular total ---
+                # --- ✅ 5. Recalcular total ---
+                pedido.refresh_from_db()
                 pedido.calcular_total()
 
                 return render(request, 'pedidos/editar_pedido.html', {
@@ -242,6 +274,11 @@ def get_detalles_json(pedido):
 def lista_pedidos(request):
     #ORDENAR POR FECHA ASCENDENTE YA QUE LO QUE INGRESA PRIMERO DEBE APARECER PRIMERO y filtrar por pendientes
     pedidos = Pedido.objects.filter(estado='pendiente').order_by('fecha')
+    for pedido in pedidos:
+        pedido.tiene_menu = any(
+            d.producto and d.producto.categoria == 'menu'
+            for d in pedido.detalles.all()
+        )
     return render(request, 'pedidos/lista_pedidos.html', {'pedidos': pedidos})
 
 
@@ -331,53 +368,89 @@ def pedidos_del_dia(request):
         'total_dia': total_dia,
     })
 
+def lista_pedidos_pendientes(request):
+    #ORDENAR POR FECHA ASCENDENTE YA QUE LO QUE INGRESA PRIMERO DEBE APARECER PRIMERO y filtrar por pendientes
+    pedidos = Pedido.objects.filter(estado='pendiente').order_by('fecha')
+    for pedido in pedidos:
+        pedido.tiene_menu = any(
+            d.producto and d.producto.categoria == 'menu'
+            for d in pedido.detalles.all()
+        )
+    return render(request, 'pedidos/pedidos_pendientes.html', {'pedidos': pedidos})
 
 def caja_admin(request):
-    # Pedidos listos que aún no fueron cerrados
-    pedidos_listos = Pedido.objects.filter(estado='listo', cierre_caja__isnull=True).order_by('fecha')
-    return render(request, 'pedidos/caja_admin.html', {'pedidos': pedidos_listos})
+    # Pedidos listos que aún no fueron cerrados en forma descendente
+    pedidos_listos = Pedido.objects.filter(estado='listo', cierre_caja__isnull=True, condicion_venta='contado').order_by('-fecha')
+    gastos = Gasto.objects.filter(cerrado=False)
+    return render(request, 'pedidos/caja_admin.html', {'pedidos': pedidos_listos, 'gastos': gastos})
 
 @csrf_exempt
 def cerrar_caja(request):
-    # Tomar los pedidos listos sin cierre
-    pedidos_listos = list(Pedido.objects.filter(estado='listo', cierre_caja__isnull=True))
-    
-    if not pedidos_listos:
-        return HttpResponse("No hay pedidos listos para cerrar.", status=400)
-    
-    # Crear nuevo cierre
-    cierre = CierreCaja.objects.create()
-    
-    # Calcular total
-    total = sum(p.total or 0 for p in pedidos_listos)
-    total_banco = sum(p.total for p in pedidos_listos if p.ind_bancario)
-    total_efectivo = total - total_banco
+    pedidos_listos = list(Pedido.objects.filter(estado='listo', cierre_caja__isnull=True, condicion_venta='contado'))
+    gastos = list(Gasto.objects.filter(cerrado=False))
+
+    if not pedidos_listos and not gastos:
+        return HttpResponse("No hay pedidos ni gastos pendientes para cerrar.", status=400)
+
+    # Obtener el saldo anterior desde el último cierre
+    ultimo_cierre = CierreCaja.objects.order_by('-fecha_hora').first()
+    saldo_anterior = ultimo_cierre.saldo_actual if ultimo_cierre else Decimal('0')
+
+    # Totales de ventas
+    total_ventas = sum(p.total or 0 for p in pedidos_listos)
+    total_banco = sum(p.total for p in pedidos_listos if getattr(p, 'ind_bancario', False))
+    total_efectivo = total_ventas - total_banco
+
+    # Totales de gastos
+    total_gastos = sum(g.monto for g in gastos)
+    total_gastos_bancarios = sum(g.monto for g in gastos if getattr(g, 'ind_bancario', False))
+    total_gastos_efectivo = total_gastos - total_gastos_bancarios
+
+    # 💰 Saldo actual = saldo anterior + todas las ventas (efectivo + transferencias) - gastos
+    saldo_actual = saldo_anterior + total_ventas - total_gastos
 
 
-    cierre.total_ventas = total
-    cierre.save()
-    
-    # Asociar pedidos al cierre y marcarlos como cerrados
+    # Crear cierre
+    cierre = CierreCaja.objects.create(
+        saldo_anterior=saldo_anterior,
+        total_ventas=total_ventas,
+        total_gastos=total_gastos,
+        saldo_actual=saldo_actual,
+        saldo_efectivo_anterior=ultimo_cierre.saldo_efectivo if ultimo_cierre else 0,
+        saldo_bancario_anterior=ultimo_cierre.saldo_bancario if ultimo_cierre else 0,
+        saldo_efectivo= (ultimo_cierre.saldo_efectivo if ultimo_cierre else 0) + total_efectivo - total_gastos_efectivo,
+        saldo_bancario=(ultimo_cierre.saldo_bancario if ultimo_cierre else 0) + total_banco - total_gastos_bancarios,
+
+    )
+
+    # Asociar pedidos y gastos al cierre
     Pedido.objects.filter(id__in=[p.id for p in pedidos_listos]).update(estado='cerrado', cierre_caja=cierre)
-    
-    # Generar PDF
+    Gasto.objects.filter(id__in=[g.id for g in gastos]).update(cerrado=True, cierre_caja=cierre)
+
+    # 🧾 Generar PDF
     path_wkhtmltopdf = r"C:\Program Files\wkhtmltopdf\bin\wkhtmltopdf.exe"
     config = pdfkit.configuration(wkhtmltopdf=path_wkhtmltopdf)
+
     html = render_to_string('pedidos/arqueo_cierre.html', {
         'pedidos': pedidos_listos,
-        'total': total,
+        'gastos': gastos,
         'cierre': cierre,
+        'saldo_anterior': saldo_anterior,
+        'total_ventas': total_ventas,
         'total_banco': total_banco,
         'total_efectivo': total_efectivo,
+        'total_gastos': total_gastos,
+        'saldo_actual': saldo_actual,
     })
-    pdf = pdfkit.from_string(html, False, configuration=config)
 
+    pdf = pdfkit.from_string(html, False, configuration=config)
     response = HttpResponse(pdf, content_type='application/pdf')
     response['Content-Disposition'] = f'attachment; filename="arqueo_{cierre.fecha_hora.strftime("%Y%m%d_%H%M")}.pdf"'
     return response
 
+
 #carga de clientes desde un formulario
-from .forms import ClienteForm, ProductoForm, SaborForm
+from .forms import ClienteForm, GastoForm, ProductoForm, SaborForm
 def carga_clientes(request):
     if request.method == 'POST':
         form = ClienteForm(request.POST)
@@ -395,6 +468,37 @@ def carga_clientes(request):
     return render(request, 'pedidos/carga_clientes.html', {
         'form': form,
         'clientes': clientes
+    })
+
+def lista_clientes(request):
+    q = request.GET.get('q', '')
+    clientes = Cliente.objects.all()
+
+    if q:
+        clientes = clientes.filter(nombre__icontains=q)
+
+    return render(request, 'pedidos/lista_clientes.html', {
+        'clientes': clientes
+    })
+
+def editar_cliente(request, cliente_id):
+    cliente = get_object_or_404(Cliente, id=cliente_id)
+
+    if request.method == 'POST':
+        form = ClienteForm(request.POST, instance=cliente)
+        if form.is_valid():
+            form.save()
+            return render(request, 'pedidos/editar_cliente.html', {
+                'form': form,
+                'cliente': cliente,
+                'guardado': True
+            })
+    else:
+        form = ClienteForm(instance=cliente)
+
+    return render(request, 'pedidos/editar_cliente.html', {
+        'form': form,
+        'cliente': cliente
     })
 
 def carga_productos(request):
@@ -415,6 +519,39 @@ def carga_productos(request):
         'form': form,
         'productos': productos
     })
+
+def editar_producto(request, producto_id):
+    producto = get_object_or_404(Producto, id=producto_id)
+
+    if request.method == 'POST':
+        form = ProductoForm(request.POST, instance=producto)
+        if form.is_valid():
+            form.save()
+            return render(request, 'pedidos/editar_producto.html', {
+                'form': form,
+                'producto': producto,
+                'guardado': True
+            })
+    else:
+        form = ProductoForm(instance=producto)
+
+    return render(request, 'pedidos/editar_producto.html', {
+        'form': form,
+        'producto': producto
+    })
+
+def listar_productos(request):
+    categoria = request.GET.get('categoria')
+    if categoria:
+        productos = Producto.objects.filter(categoria=categoria).order_by('nombre')
+    else:
+        productos = Producto.objects.all().order_by('nombre')
+    
+    return render(request, 'pedidos/listar_productos.html', {
+        'productos': productos
+    })
+
+
 def carga_sabores(request):
     if request.method == 'POST':
         form = SaborForm(request.POST)
@@ -435,3 +572,331 @@ def carga_sabores(request):
     })
 
 
+def registrar_gasto(request):
+    if request.method == 'POST':
+        form = GastoForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return render(request, 'pedidos/carga_gastos.html', {
+                'form': GastoForm(),  # se limpia el formulario
+                'gastos': Gasto.objects.all().order_by('fecha'),
+                'gasto_guardado': True  # bandera para mostrar el modal
+            })
+    else:
+        form = GastoForm()
+    
+    gastos = Gasto.objects.filter(cerrado=False)
+    return render(request, 'pedidos/carga_gastos.html', {'form': form, 'gastos': gastos})
+
+@csrf_exempt
+def eliminar_pedido(request, pedido_id):
+    from .models import Pedido
+    if request.method == "POST":
+        try:
+            pedido = Pedido.objects.get(id=pedido_id)
+            pedido.delete()
+            return JsonResponse({"success": True})
+        except Pedido.DoesNotExist:
+            return JsonResponse({"success": False, "error": "El pedido no existe."})
+        except Exception as e:
+            return JsonResponse({"success": False, "error": str(e)})
+    return JsonResponse({"success": False, "error": "Método no permitido."})
+
+def nuevo_cliente_ajax(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            nombre = data.get('nombre')
+            apellido = data.get('apellido')
+            telefono = data.get('telefono')
+
+            cliente = Cliente.objects.create(
+                nombre=nombre,
+                apellido=apellido,
+                telefono=telefono
+            )
+
+            return JsonResponse({
+                'success': True,
+                'id': cliente.id,
+                'nombre': cliente.nombre,
+                'apellido': cliente.apellido,
+                'telefono': cliente.telefono
+            })
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)})
+    return JsonResponse({'success': False, 'error': 'Método no permitido'})
+from datetime import date
+from django.db.models import Sum, F
+def balance_mensual(request):
+    hoy = date.today()
+    mes = int(request.GET.get('mes', hoy.month))
+    año = int(request.GET.get('año', hoy.year))
+
+    # Filtrar pedidos cerrados del mes
+    pedidos = Pedido.objects.filter(fecha__month=mes, fecha__year=año, estado='cerrado')
+    gastos = Gasto.objects.filter(fecha__month=mes, fecha__year=año)
+
+    total_ventas = pedidos.aggregate(total=Sum('total'))['total'] or 0
+    total_bancario = pedidos.filter(ind_bancario=True).aggregate(total=Sum('total'))['total'] or 0
+    total_efectivo = total_ventas - total_bancario
+    total_gastos = gastos.aggregate(total=Sum('monto'))['total'] or 0
+
+    balance_final = total_ventas - total_gastos
+
+    contexto = {
+        'mes': mes,
+        'año': año,
+        'total_ventas': total_ventas,
+        'total_efectivo': total_efectivo,
+        'total_bancario': total_bancario,
+        'total_gastos': total_gastos,
+        'balance_final': balance_final,
+        'pedidos': pedidos,
+        'gastos': gastos
+    }
+
+    return render(request, 'pedidos/balance_mensual.html', contexto)
+
+def balance_diario(request):
+    hoy = date.today()
+
+    # Si viene por GET, usar la fecha seleccionada
+    fecha_str = request.GET.get('fecha')
+
+    if fecha_str:
+        año, mes, dia = map(int, fecha_str.split('-'))
+        fecha = date(año, mes, dia)
+    else:
+        fecha = hoy
+
+    pedidos = Pedido.objects.filter(fecha__date=fecha, estado='cerrado')
+    gastos = Gasto.objects.filter(fecha__date=fecha)
+
+    total_ventas = pedidos.aggregate(total=Sum('total'))['total'] or 0
+    total_bancario = pedidos.filter(ind_bancario=True).aggregate(total=Sum('total'))['total'] or 0
+    total_efectivo = total_ventas - total_bancario
+    total_gastos = gastos.aggregate(total=Sum('monto'))['total'] or 0
+    total_gastos_bancarios = gastos.filter(ind_bancario=True).aggregate(total=Sum('monto'))['total'] or 0
+    total_gastos_efectivo = total_gastos - total_gastos_bancarios
+
+    balance_final = total_ventas - total_gastos
+
+    # 👉 CAJA ACTUAL
+    ultimo_cierre = CierreCaja.objects.last()
+    caja_actual = ultimo_cierre.saldo_actual if ultimo_cierre else 0
+    saldo_efectivo = (ultimo_cierre.saldo_efectivo if ultimo_cierre else 0)
+    saldo_bancario = (ultimo_cierre.saldo_bancario if ultimo_cierre else 0)
+
+    contexto = {
+        'fecha': fecha,
+        'total_ventas': total_ventas,
+        'total_efectivo': total_efectivo,
+        'total_bancario': total_bancario,
+        'total_gastos': total_gastos,
+        'balance_final': balance_final,
+        'pedidos': pedidos,
+        'gastos': gastos,
+        'total_gastos_bancarios': total_gastos_bancarios,
+        'total_gastos_efectivo': total_gastos_efectivo,
+        'caja_actual': caja_actual,
+        'saldo_efectivo': saldo_efectivo,
+        'saldo_bancario': saldo_bancario,
+
+    }
+
+    return render(request, 'pedidos/balance_diario.html', contexto)
+
+
+from django.db.models import Sum, F, FloatField, ExpressionWrapper, IntegerField
+
+def caja_actual_view(request):
+    ultimo_cierre = CierreCaja.objects.order_by('-fecha_hora').first()
+    caja_actual = ultimo_cierre.saldo_actual if ultimo_cierre else 0
+    saldo_efectivo = ultimo_cierre.saldo_efectivo if ultimo_cierre else 0
+    saldo_bancario = ultimo_cierre.saldo_bancario if ultimo_cierre else 0
+
+    contexto = {
+        'caja_actual': caja_actual,
+        'saldo_efectivo': saldo_efectivo,
+        'saldo_bancario': saldo_bancario,
+    }
+
+    return render(request, 'pedidos/caja_actual.html', contexto)
+
+def ventas_detalladas(request):
+    # 🔹 Filtro de mes y año (por defecto: mes actual)
+    mes = request.GET.get('mes')
+    anio = request.GET.get('anio')
+
+    hoy = date.today()
+    mes = int(mes) if mes else hoy.month
+    anio = int(anio) if anio else hoy.year
+
+    detalles = DetallePedido.objects.filter(
+        pedido__fecha__month=mes,
+        pedido__fecha__year=anio
+    )
+
+    # 🔹 Pizzas por tamaño
+    pizzas_por_tamano = (
+        detalles.filter(tamano__isnull=False)
+        .annotate(
+            borde_valor=ExpressionWrapper(
+                F('con_borde') * 10000,
+                output_field=IntegerField()
+            )
+        )
+        .values('tamano__id', 'tamano__nombre')
+        .annotate(
+            cantidad_total=Sum('cantidad'),
+            total_ventas=Sum(
+                F('cantidad') * (F('tamano__precio') + F('borde_valor')),
+                output_field=FloatField()
+            )
+        )
+        .order_by('-cantidad_total')
+    )
+
+    # 🔹 Pizzas por sabor
+    pizzas_por_sabor = (
+        detalles.filter(tamano__isnull=False, sabores__isnull=False)
+        .values('sabores__id', 'sabores__nombre')
+        .annotate(
+            cantidad_total=Sum('cantidad'),
+            total_ventas=Sum(
+                F('cantidad') * F('tamano__precio'),
+                output_field=FloatField()
+            )
+        )
+        .order_by('-cantidad_total')
+    )
+
+    # 🔹 Productos por categoría
+    productos_por_categoria = (
+        detalles.filter(producto__isnull=False)
+        .values('producto__id', 'producto__nombre', 'producto__precio', 'producto__categoria')
+        .annotate(
+            cantidad_total=Sum('cantidad'),
+            total_ventas=Sum(
+                F('cantidad') * F('producto__precio'),
+                output_field=FloatField()
+            )
+        )
+        .order_by('producto__categoria', '-cantidad_total')
+    )
+
+    contexto = {
+        'pizzas_por_tamano': pizzas_por_tamano,
+        'pizzas_por_sabor': pizzas_por_sabor,
+        'productos_por_categoria': productos_por_categoria,
+        'mes': mes,
+        'anio': anio,
+    }
+
+    return render(request, 'pedidos/ventas_detalladas.html', contexto)
+
+
+from django.shortcuts import render, redirect
+from django.utils import timezone
+from .models import MenuDiario
+from .forms import MenuDiarioForm
+
+def menu_diario(request):
+    hoy = timezone.now().date()
+    try:
+        menu = MenuDiario.objects.get(fecha=hoy)
+    except MenuDiario.DoesNotExist:
+        menu = None
+
+    if request.method == 'POST':
+        form = MenuDiarioForm(request.POST, request.FILES)
+        if form.is_valid():
+            # Si ya existe menú del día, lo eliminamos
+            if menu:
+                menu.delete()
+            form.save()
+            return redirect('menu_diario')
+    else:
+        form = MenuDiarioForm()
+
+    return render(request, 'pedidos/menu_diario.html', {'menu': menu, 'form': form})
+
+def cobrar_credito(request):
+    clientes = Cliente.objects.all()
+    pedidos_credito = []
+
+    cliente_id = request.GET.get('cliente')
+    if cliente_id:
+        pedidos_credito = Pedido.objects.filter(
+            cliente_id=cliente_id,
+            estado='listo',
+            condicion_venta='credito',
+            cierre_caja__isnull=True
+        ).order_by('-fecha')
+
+    return render(request, 'pedidos/cobrar_credito.html', {
+        'clientes': clientes,
+        'pedidos_credito': pedidos_credito
+    })
+@csrf_exempt
+def cobrar_credito_post(request):
+    if request.method != "POST":
+        return HttpResponse("Método no permitido", status=405)
+
+    # IDs de pedidos seleccionados
+    pedidos_ids = request.POST.getlist('pedidos_ids')
+    if not pedidos_ids:
+        return HttpResponse("No se seleccionaron pedidos para cobrar.", status=400)
+
+    pedidos_credito = Pedido.objects.filter(id__in=pedidos_ids, estado='listo', condicion_venta='credito', cierre_caja__isnull=True)
+    if not pedidos_credito.exists():
+        return HttpResponse("No hay pedidos crédito pendientes para los seleccionados.", status=400)
+
+    # Obtener saldo anterior
+    ultimo_cierre = CierreCaja.objects.order_by('-fecha_hora').first()
+    saldo_anterior = ultimo_cierre.saldo_actual if ultimo_cierre else Decimal('0')
+
+    # Totales de cobro
+    total_cobrado = sum(p.total or 0 for p in pedidos_credito)
+    total_banco = sum(p.total for p in pedidos_credito if getattr(p, 'ind_bancario', False))
+    total_efectivo = total_cobrado - total_banco
+
+    # 💰 Calcular nuevo saldo
+    saldo_actual = saldo_anterior + total_cobrado
+
+    # Crear cierre solo para este cobro de crédito
+    cierre = CierreCaja.objects.create(
+        saldo_anterior=saldo_anterior,
+        total_ventas=total_cobrado,
+        total_gastos=0,
+        saldo_actual=saldo_actual,
+        saldo_efectivo_anterior=ultimo_cierre.saldo_efectivo if ultimo_cierre else 0,
+        saldo_bancario_anterior=ultimo_cierre.saldo_bancario if ultimo_cierre else 0,
+        saldo_efectivo=(ultimo_cierre.saldo_efectivo if ultimo_cierre else 0) + total_efectivo,
+        saldo_bancario=(ultimo_cierre.saldo_bancario if ultimo_cierre else 0) + total_banco,
+    )
+    pedidos_a_cobrar = list(pedidos_credito)  # Lista de objetos para usar en el PDF
+    # Marcar pedidos como cerrados y asociar al cierre
+    pedidos_credito.update(estado='cerrado', cierre_caja=cierre)
+
+    # Generar PDF
+    path_wkhtmltopdf = r"C:\Program Files\wkhtmltopdf\bin\wkhtmltopdf.exe"
+    config = pdfkit.configuration(wkhtmltopdf=path_wkhtmltopdf)
+
+    html = render_to_string('pedidos/arqueo_cierre.html', {
+        'pedidos': pedidos_a_cobrar,
+        'gastos': [],
+        'cierre': cierre,
+        'saldo_anterior': saldo_anterior,
+        'total_ventas': total_cobrado,
+        'total_banco': total_banco,
+        'total_efectivo': total_efectivo,
+        'total_gastos': 0,
+        'saldo_actual': saldo_actual,
+    })
+
+    pdf = pdfkit.from_string(html, False, configuration=config)
+    response = HttpResponse(pdf, content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename="cobro_credito_{cierre.fecha_hora.strftime("%Y%m%d_%H%M")}.pdf"'
+    return response

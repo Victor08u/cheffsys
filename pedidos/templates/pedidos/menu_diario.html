@@ -1,0 +1,66 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Menú Diario</title>
+<style>
+body { 
+    font-family: 'Poppins', sans-serif; 
+    background: #fdfbf8; 
+    text-align: center; 
+    padding: 40px; 
+}
+img { 
+    max-width: 90%; 
+    border-radius: 20px; 
+    box-shadow: 0 8px 20px rgba(0,0,0,0.2); 
+    margin-bottom: 20px; 
+}
+form { 
+    display: inline-block; 
+    margin-top: 20px; 
+    background: #fff; 
+    padding: 25px; 
+    border-radius: 15px; 
+    box-shadow: 0 6px 15px rgba(0,0,0,0.1); 
+}
+input[type=file] { 
+    padding: 10px; 
+    margin-bottom: 15px; 
+    border-radius: 10px; 
+    border: 1px solid #A36A2B; 
+}
+button { 
+    padding: 12px 25px; 
+    background: #28a745; 
+    color: white; 
+    border: none; 
+    border-radius: 12px; 
+    cursor: pointer; 
+    font-weight: bold; 
+    transition: 0.3s; 
+}
+button:hover { 
+    background: #218838; 
+}
+</style>
+</head>
+<body>
+
+
+{% if menu %}
+    <img src="{{ menu.imagen.url }}" alt="Menú Diario">
+{% else %}
+    <h2>No hay menú cargado para hoy</h2>
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Cargar Menú</button>
+    </form>
+{% endif %}
+
+<a href="{% url 'inicio' %}" style="display:block; margin-top:30px; text-decoration:none; color:#A36A2B;">⬅ Volver</a>
+
+</body>
+</html>

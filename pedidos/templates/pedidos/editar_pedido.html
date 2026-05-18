@@ -336,7 +336,9 @@
       <option value="retiro" {% if pedido.tipo_entrega == 'retiro' %}selected{% endif %}>Retiro</option>
     </select>
 
-    <h3 class="section-title">🛒 Ítems del pedido (Total: {{ pedido.total|floatformat:0 }} Gs.)</h3>
+    <h3 class="section-title" id="titulo_total">
+      🛒 Ítems del pedido (Total: <span id="total_mostrado">{{ pedido.total|floatformat:0 }}</span> Gs.)
+    </h3>
     <div id="items">
       </div>
     <input type="hidden" name="total_items" id="total_items" value="0">
@@ -353,7 +355,7 @@
 
     <label>Observación general:</label>
     <textarea name="observacion_general" rows="3" placeholder="Observaciones del pedido">{{ pedido.observacion_general|default_if_none:"" }}</textarea>
-
+    <input type="hidden" name="detalles_eliminados" id="detalles_eliminados" value="">
     <button type="submit">💾 Actualizar Pedido</button>
   </form>
 
@@ -364,6 +366,7 @@
 
   <script>
     let itemCount = 0;
+    const PRECIO_BORDE = 10000;  // 💰 precio adicional por borde
     // Datos de productos (igual que en nuevo_pedido.html)
     const productosPorCategoria = {
       'hamburguesa': [
@@ -387,6 +390,13 @@
         {% endif %}
       {% endfor %}
       ],
+      'menu': [
+        {% for p in productos %}
+            {% if p.categoria == 'menu' %}
+            {"id": {{ p.id }}, "nombre": "{{ p.nombre|escapejs }}", "precio": {{ p.precio|floatformat:0 }} },
+            {% endif %}
+        {% endfor %}
+        ],
       'otro': [
       {% for p in productos %}
         {% if p.categoria == 'otro' %}
@@ -395,6 +405,21 @@
       {% endfor %}
       ]
     };
+    // Diccionario de precios base
+    const precios = {
+      productos: {},
+      tamanos: {}
+    };
+
+    // Cargamos los precios de productos
+    {% for p in productos %}
+    precios.productos[{{ p.id }}] = {{ p.precio|floatformat:0 }};
+    {% endfor %}
+
+    // Cargamos los precios de tamaños de pizza
+    {% for t in tamanos %}
+    precios.tamanos[{{ t.id }}] = {{ t.precio|default:0|floatformat:0 }};
+    {% endfor %}
     
     // Lista de detalles existentes inyectada desde la vista
     const detallesExistentes = JSON.parse('{{ detalles_json|escapejs }}');
@@ -414,12 +439,13 @@
           <option value="hamburguesa" ${tipoDefault === 'hamburguesa' ? 'selected' : ''}>🍔 Hamburguesa</option>
           <option value="papas" ${tipoDefault === 'papas' ? 'selected' : ''}>🍟 Papas</option>
           <option value="bebida" ${tipoDefault === 'bebida' ? 'selected' : ''}>🥤 Bebida</option>
+          <option value="menu" ${tipoDefault === 'menu' ? 'selected' : ''}>🍽️ Menú</option>
           <option value="otro" ${tipoDefault === 'otro' ? 'selected' : ''}>🍽️ Otro</option>
         </select>
 
         <div id="pizza_${index}" class="pizzaBox" style="display:${isProducto ? 'none' : 'block'};">
           <label>Tamaño:</label>
-          <select name="tamano_${index}">
+          <select name="tamano_${index}" onchange="recalcularTotal()">
             {% for t in tamanos %}
               <option value="{{ t.id }}" ${isPizza && detalle.tamano_id === {{ t.id }} ? 'selected' : ''}>
                 {{ t.nombre }} ({{ t.porciones }} porciones)
@@ -438,7 +464,8 @@
           </div>
           <div style="margin-top:10px;">
             <label>
-              <input type="checkbox" name="borde_${index}" value="1" class="hidden" ${isPizza && detalle.con_borde ? 'checked' : ''}>
+              <input type="checkbox" name="borde_${index}" value="1" class="hidden" 
+                ${isPizza && detalle.con_borde ? 'checked' : ''} onchange="recalcularTotal()">
               <span class="chip">🍞 Con borde</span>
             </label>
           </div>
@@ -450,7 +477,7 @@
             <option value="">Seleccione producto...</option>
           </select>
           <label>Cantidad:</label>
-          <input type="number" name="cantidad_${index}" value="${isProducto ? detalle.cantidad : 1}" min="1">
+          <input type="number" name="cantidad_${index}" value="${isProducto ? detalle.cantidad : 1}" min="1" onchange="recalcularTotal()">
         </div>
 
         <label>Observación:</label>
@@ -474,6 +501,7 @@
       if (detalle && detalle.tipo !== 'pizza') {
         cambiarTipo(itemCount, detalle.tipo, detalle.producto_id);
       }
+      recalcularTotal();
     }
 
     // Función para precargar los ítems al cargar la página
@@ -485,11 +513,49 @@
       if (detallesExistentes.length === 0) {
           agregarItem();
       }
+      recalcularTotal();
     }
 
     // Función para eliminar un ítem (igual que antes)
     function eliminarItem(btn) {
-      btn.parentElement.remove();
+      const itemDiv = btn.closest('.item');
+      const detalleIdInput = itemDiv.querySelector('input[name^="detalle_id_"]');
+      
+      // Si el ítem tiene un detalle_id, lo agregamos a la lista de eliminados
+      if (detalleIdInput && detalleIdInput.value) {
+        const idEliminado = detalleIdInput.value;
+        const eliminadosInput = document.getElementById('detalles_eliminados');
+        let ids = eliminadosInput.value ? eliminadosInput.value.split(',') : [];
+        if (!ids.includes(idEliminado)) {
+          ids.push(idEliminado);
+          eliminadosInput.value = ids.join(',');
+        }
+      }
+
+      // Eliminar del DOM
+      itemDiv.remove();
+
+      // Recalcular cantidad de ítems visibles
+      const itemsRestantes = document.querySelectorAll('#items .item').length;
+      document.getElementById('total_items').value = itemsRestantes;
+      reenumerarItems();
+      recalcularTotal();
+    }
+    // 🔁 Reenumerar ítems después de eliminar uno
+    function reenumerarItems() {
+      const items = document.querySelectorAll('#items .item');
+      let nuevoIndice = 1;
+      items.forEach(item => {
+        item.querySelector('h4').textContent = `🧾 Ítem ${nuevoIndice}`;
+        // Renombrar todos los campos internos
+        item.querySelectorAll('[name]').forEach(el => {
+          const oldName = el.getAttribute('name');
+          const newName = oldName.replace(/\d+/, nuevoIndice);
+          el.setAttribute('name', newName);
+        });
+        nuevoIndice++;
+      });
+      document.getElementById('total_items').value = items.length;
     }
 
     // Función para cambiar el tipo de ítem (igual que antes, con parámetro opcional para precargar)
@@ -497,6 +563,7 @@
       const pizzaBox = document.getElementById(`pizza_${i}`);
       const productoBox = document.getElementById(`producto_${i}`);
       const selectProducto = document.getElementById(`select_producto_${i}`);
+      const PRECIO_BORDE = 10000;  // 💰 precio adicional por borde
 
       if (tipo === 'pizza') {
         pizzaBox.style.display = 'block';
@@ -517,6 +584,44 @@
           });
         }
       }
+      selectProducto.addEventListener('change', recalcularTotal);
+    }
+    function recalcularTotal() {
+      let total = 0;
+
+      document.querySelectorAll('#items .item').forEach(item => {
+        const tipoSelect = item.querySelector('select[name^="tipo_item_"]');
+        const tipo = tipoSelect ? tipoSelect.value : null;
+
+        if (tipo === 'pizza') {
+          const tamanoSelect = item.querySelector('select[name^="tamano_"]');
+          const tamanoId = tamanoSelect ? tamanoSelect.value : null;
+          let subtotalPizza = 0;
+
+          if (tamanoId && precios.tamanos[tamanoId]) {
+            subtotalPizza += precios.tamanos[tamanoId];
+          }
+
+          // Si tiene borde, sumamos 10.000
+          const bordeCheckbox = item.querySelector('input[name^="borde_"]');
+          if (bordeCheckbox && bordeCheckbox.checked) {
+            subtotalPizza += PRECIO_BORDE;
+          }
+
+          total += subtotalPizza;
+        } else if (tipo) {
+          const productoSelect = item.querySelector('select[name^="producto_"]');
+          const productoId = productoSelect ? productoSelect.value : null;
+          const cantidadInput = item.querySelector('input[name^="cantidad_"]');
+          const cantidad = cantidadInput ? parseInt(cantidadInput.value) || 1 : 1;
+
+          if (productoId && precios.productos[productoId]) {
+            total += precios.productos[productoId] * cantidad;
+          }
+        }
+      });
+
+      document.getElementById('total_mostrado').textContent = total.toLocaleString('es-ES');
     }
   </script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>

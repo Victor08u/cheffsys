@@ -85,28 +85,28 @@ header h1 {
 }
 
 /* BOTÓN VOLVER */
-    .btn-volver {
-      background-color: var(--violeta);
-      color: var(--blanco);
-      border: none;
-      padding: 14px 28px;
-      font-size: 1.8rem;
-      font-weight: 600;
-      border-radius: 14px;
-      cursor: pointer;
-      transition: 0.3s;
-      position: absolute;
-      left: 20px;
-      top: 20px;
-      box-shadow: 0 6px 14px var(--sombra-suave);
-    }
+.btn-volver {
+    background-color: var(--violeta);
+    color: var(--blanco);
+    border: none;
+    padding: 14px 28px;
+    font-size: 1.8rem;
+    font-weight: 600;
+    border-radius: 14px;
+    cursor: pointer;
+    transition: 0.3s;
+    position: absolute;
+    left: 20px;
+    top: 20px;
+    box-shadow: 0 6px 14px var(--sombra-suave);
+}
 
-    .btn-volver:hover {
-      background-color: var(--marron);
-      transform: scale(1.05);
-    }
+.btn-volver:hover {
+    background-color: var(--marron);
+    transform: scale(1.05);
+}
 
-/* CONTENEDOR DE PEDIDOS */
+/* CONTENEDOR DE PEDIDOS / GASTOS */
 .pedidos-container {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
@@ -116,7 +116,7 @@ header h1 {
     margin-top: 10px;
 }
 
-/* CARD DE PEDIDO */
+/* CARD */
 .pedido-card {
     background-color: var(--blanco);
     color: var(--violeta);
@@ -188,7 +188,7 @@ hr {
     <button class="btn-volver" onclick="window.location.href='/'">⬅️ Volver</button>
 </header>
 
-{% if pedidos %}
+{% if pedidos or gastos %}
 <div class="botones-arriba">
     <form action="{% url 'cerrar_caja' %}" method="post" style="display:inline;">
         {% csrf_token %}
@@ -196,6 +196,8 @@ hr {
     </form>
 </div>
 
+{% if pedidos %}
+<h2 style="margin-top:20px; font-size:2rem;">📋 Pedidos Listos</h2>
 <div class="pedidos-container">
     {% for pedido in pedidos %}
     <div class="pedido-card">
@@ -226,9 +228,25 @@ hr {
     </div>
     {% endfor %}
 </div>
+{% endif %}
+
+{% if gastos %}
+<h2 style="margin-top:40px; font-size:2rem;">💸 Gastos</h2>
+<div class="pedidos-container">
+    {% for gasto in gastos %}
+    <div class="pedido-card">
+        <h2>Gasto #{{ gasto.id }}</h2>
+        <div class="detalle-item">📝 {{ gasto.descripcion }}</div>
+        <div class="detalle-item">💰 Monto: GS.{{ gasto.monto|floatformat:0|intcomma }}</div>
+        <div class="detalle-item">📅 {{ gasto.fecha|date:"d/m/Y H:i" }}</div>
+        <div class="detalle-item">Estado: {% if gasto.cerrado %}✅ Cerrado{% else %}⏳ Abierto{% endif %}</div>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
 
 {% else %}
-<div class="no-pedidos">✅ No hay pedidos listos pendientes</div>
+<div class="no-pedidos">✅ No hay pedidos ni gastos pendientes</div>
 {% endif %}
 
 </body>
