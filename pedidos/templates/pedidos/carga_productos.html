@@ -218,29 +218,7 @@
 
   <form method="POST">
     {% csrf_token %}
-    <label for="nombre">Nombre del Producto:</label>
-    <input type="text" id="nombre" name="nombre" required>
-
-    <label for="descripcion">Descripción:</label>
-    <textarea id="descripcion" name="descripcion" rows="3"></textarea>
-
-    <label for="precio">Precio (Gs):</label>
-    <input type="number" id="precio" name="precio" required>
-
-    <label for="categoria">Categoría:</label>
-    <select id="categoria" name="categoria" required>
-      <option value="">-- Seleccione Categoría --</option>
-      <option value="hamburguesa">Hamburguesa</option>
-      <option value="papas">Papas</option>
-      <option value="bebida">Bebida</option>
-      <option value="otros">Otros</option>
-    </select>
-
-    <div class="toggle-container">
-      <span>Disponible:</span>
-      <input type="checkbox" id="disponible" name="disponible" checked>
-      <label for="disponible"></label>
-    </div>
+    {{ form.as_p }}
 
     <button type="submit">💾 Guardar Producto</button>
     <a href="{% url 'inicio' %}" class="btn-secondary">↩ Volver</a>

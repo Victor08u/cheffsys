@@ -1,31 +1,38 @@
-#para carga de clientes antes del pedido
-from .models import Cliente, Gasto, Sabor, Producto
+# para carga de clientes antes del pedido
+from .models import Cliente, Gasto, Sabor, Producto, MenuDiario
 from .utils import enviar_whatsapp
 from django import forms
+
+
 class ClienteForm(forms.ModelForm):
     class Meta:
         model = Cliente
-        fields = ['nombre','apellido','telefono', 'es_mesa']
+        fields = ['nombre', 'apellido', 'telefono', 'es_mesa']
         widgets = {
             'nombre': forms.TextInput(attrs={'class': 'form-control'}),
             'apellido': forms.TextInput(attrs={'class': 'form-control'}),
             'telefono': forms.TextInput(attrs={'class': 'form-control'}),
             'es_mesa': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
-        }   
+        }
         labels = {
             'nombre': 'Nombre',
             'apellido': 'Apellido',
             'telefono': 'Teléfono',
             'es_mesa': 'Es Mesa',
-        }   
-    help_texts = {
+        }
+        help_texts = {
             'telefono': 'Ingrese el número de WhatsApp o teléfono del cliente.',
         }
+
     def clean_telefono(self):
         telefono = self.cleaned_data.get('telefono')
         if telefono and not telefono.replace("+", "").replace(" ", "").isdigit():
-            raise forms.ValidationError("El número de teléfono solo debe contener dígitos, espacios o el símbolo '+'.")
+            raise forms.ValidationError(
+                "El número de teléfono solo debe contener dígitos, espacios o el símbolo '+'."
+            )
         return telefono
+
+
 class ProductoForm(forms.ModelForm):
     class Meta:
         model = Producto
@@ -42,9 +49,11 @@ class ProductoForm(forms.ModelForm):
             'categoria': 'Categoría',
             'disponible': 'Disponible',
         }
-    help_texts = {
+        help_texts = {
             'precio': 'Ingrese el precio en Guaraníes (Gs).',
         }
+
+
 class SaborForm(forms.ModelForm):
     class Meta:
         model = Sabor
@@ -57,10 +66,11 @@ class SaborForm(forms.ModelForm):
             'nombre': 'Nombre del Sabor',
             'descripcion': 'Descripción del Sabor',
         }
-    help_texts = {
+        help_texts = {
             'nombre': 'Ingrese el nombre del sabor de pizza.',
             'descripcion': 'Ingrese una descripción breve del sabor.',
         }
+
 
 class GastoForm(forms.ModelForm):
     class Meta:
@@ -77,7 +87,6 @@ class GastoForm(forms.ModelForm):
             'ind_bancario': '¿Gasto bancario?',
         }
 
-from .models import MenuDiario
 
 class MenuDiarioForm(forms.ModelForm):
     class Meta:

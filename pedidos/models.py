@@ -180,6 +180,5 @@ class Gasto(models.Model):
     cierre_caja = models.ForeignKey('CierreCaja', on_delete=models.SET_NULL, null=True, blank=True)
     ind_bancario = models.BooleanField(default=False)
 
-
     def __str__(self):
         return f"{self.descripcion} - Gs. {self.monto:,.0f}"
